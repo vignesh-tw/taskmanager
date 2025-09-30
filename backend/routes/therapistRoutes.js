@@ -1,11 +1,45 @@
 const express = require('express');
 const { AuthenticationDecorator, RoleAuthorizationDecorator, ResourceOwnerDecorator } = require('../patterns/AuthDecorator');
 const repositoryFactory = require('../repositories/RepositoryFactory');
+const upload = require('../middleware/uploadMiddleware');
 const router = express.Router();
 
 // Initialize repositories
 const therapistRepository = repositoryFactory.getRepository('therapist');
 const slotRepository = repositoryFactory.getRepository('slot');
+
+// Base controller for fetching therapist profile
+class TherapistProfileController {
+    async execute(req, res) {
+        try {
+            const userId = req.user.id;
+            console.log('Fetching therapist profile for user ID:', userId);
+
+            // Get therapist data from user repository (since therapists are stored as users)
+            const userRepository = repositoryFactory.getRepository('user');
+            const therapist = await userRepository.findById(userId);
+            
+            if (!therapist) {
+                return res.status(404).json({
+                    status: 'error',
+                    message: 'Therapist profile not found'
+                });
+            }
+
+            return res.status(200).json({
+                status: 'success',
+                data: therapist.getProfileData()
+            });
+        } catch (error) {
+            console.error('[Get Therapist Profile Error]:', error);
+            return res.status(500).json({
+                status: 'error',
+                message: 'Error fetching therapist profile',
+                error: error.message
+            });
+        }
+    }
+}
 
 // Base controller for listing therapists
 class ListTherapistsController {
@@ -151,10 +185,14 @@ class UpdateAvailabilityController {
     }
 }
 
+// Import auth middleware
+const { requireAuth } = require('../middleware/authMiddleware');
+
 // Create decorated controllers
 const listTherapists = new ListTherapistsController();
 const searchTherapists = new SearchTherapistsController();
 const getTherapistProfile = new GetTherapistProfileController();
+const therapistProfile = new TherapistProfileController();
 const updateTherapistProfile = new AuthenticationDecorator(
     new RoleAuthorizationDecorator(
         new UpdateTherapistProfileController(),
@@ -171,8 +209,23 @@ const updateAvailability = new AuthenticationDecorator(
 // Routes
 router.get('/', (req, res) => listTherapists.execute(req, res));
 router.get('/search', (req, res) => searchTherapists.execute(req, res));
+router.get('/me/profile', requireAuth(), (req, res) => {
+    console.log('Hit /me/profile route, user:', req.user);
+    therapistProfile.execute(req, res);
+});
 router.get('/:id', (req, res) => getTherapistProfile.execute(req, res));
 router.put('/me/profile', (req, res, next) => updateTherapistProfile.execute(req, res, next));
 router.put('/me/availability', (req, res, next) => updateAvailability.execute(req, res, next));
+
+// File upload route
+router.post('/me/upload-photo', 
+    (req, res, next) => new AuthenticationDecorator(
+        new RoleAuthorizationDecorator(
+            { execute: uploadProfilePicture },
+            ['therapist']
+        )
+    ).execute(req, res, next),
+    upload.single('profilePicture')
+);
 
 module.exports = router;
