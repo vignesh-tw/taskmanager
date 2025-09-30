@@ -31,6 +31,21 @@ class BaseRepository {
   }
 
   /**
+   * Find document by ID and update
+   */
+  async findByIdAndUpdate(id, updateData, options = {}) {
+    try {
+      return await this.model.findByIdAndUpdate(id, updateData, { 
+        new: true,  // Return the updated document
+        runValidators: true,  // Run schema validators
+        ...options 
+      });
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
    * Find documents by criteria
    */
   async find(criteria = {}, options = {}) {

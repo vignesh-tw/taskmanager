@@ -4,15 +4,14 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const dbConnection = require('./config/db');
 
-// Load environment variables based on NODE_ENV
-dotenv.config({
-  path: `.env.${process.env.NODE_ENV || 'development'}`
-});
+// Load environment variables
+dotenv.config();
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 // API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -47,7 +46,7 @@ if (require.main === module && process.env.NODE_ENV !== 'test') {
   // Connect to database
   dbConnection.connect()
     .then(() => {
-      const PORT = process.env.PORT || 5001;
+      const PORT = process.env.PORT || 5003;
       app.listen(PORT, () => {
         console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
       });

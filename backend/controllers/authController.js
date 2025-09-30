@@ -90,6 +90,41 @@ class RegistrationController {
     }
 }
 
+// Update Profile Controller
+const updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;  // Available from auth middleware
+        const updateData = req.body;
+
+        // Update user profile
+        const user = await userRepository.findByIdAndUpdate(
+            userId,
+            updateData,
+            { new: true }  // Return the updated document
+        );
+
+        if (!user) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'User not found'
+            });
+        }
+
+        // Return success response
+        return res.json({
+            status: 'success',
+            data: user.getProfileData()
+        });
+    } catch (error) {
+        console.error('[Update Profile Error]:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Failed to update profile',
+            error: error.message
+        });
+    }
+};
+
 // Base controller for login
 class LoginController {
     async execute(req, res) {
@@ -174,9 +209,51 @@ const loginUser = new LoginController();
 const getProfile = new AuthenticationDecorator(new ProfileController());
 
 // Export controllers
+/**
+ * Handle profile picture upload
+ */
+const uploadProfilePicture = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'No file uploaded'
+            });
+        }
+
+        // Update user's profile picture URL
+        const user = await userRepository.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'User not found'
+            });
+        }
+
+        // Set the URL path to the uploaded file
+        const fileUrl = `/uploads/${req.file.filename}`;
+        user.profilePicture = fileUrl;
+        await user.save();
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Profile picture uploaded successfully',
+            url: fileUrl
+        });
+    } catch (error) {
+        console.error('[Upload Error]:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error uploading profile picture'
+        });
+    }
+};
+
 module.exports = {
     registerUser: (req, res) => registerUser.execute(req, res),
     loginUser: (req, res) => loginUser.execute(req, res),
     getProfile: (req, res, next) => getProfile.execute(req, res, next),
+    updateProfile,
+    uploadProfilePicture,
     generateToken
 };

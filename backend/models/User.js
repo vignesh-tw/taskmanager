@@ -143,6 +143,10 @@ const Patient = User.discriminator('patient', patientSchema);
 
 // Therapist subclass (inherits from User) 
 const therapistSchema = new mongoose.Schema({
+  profilePicture: { 
+    type: String,
+    default: ''  // URL to the profile picture
+  },
   specialties: [{ type: String, trim: true }],
   languages: [{ type: String, trim: true }],
   rate: {
