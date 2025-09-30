@@ -17,6 +17,13 @@ app.use('/api/therapists', require('./routes/therapistRoutes'));
 app.use('/api/slots', require('./routes/slotRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 
+// Simple health endpoint (includes DB ready state)
+app.get('/api/health', (req, res) => {
+  const state = require('mongoose').connection.readyState;
+  const states = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+  res.json({ ok: true, dbState: states[state] || state, timestamp: new Date().toISOString() });
+});
+
 // Export the app object for testing
 if (require.main === module) {
     connectDB();
