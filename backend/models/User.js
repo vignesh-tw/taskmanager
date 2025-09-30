@@ -1,50 +1,114 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs'); 
+const bcrypt = require('bcryptjs');
 
-// Base User schema with discriminator key for inheritance
+/**
+ * Base User class implementing core functionality and enforcing OOP principles
+ * - Encapsulation: Private fields through MongoDB schema
+ * - Inheritance: Base class for Patient and Therapist
+ * - Polymorphism: Abstract methods for profile data
+ * - Abstraction: High-level interface for user operations
+ */
 const userSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String, required: true },
+    name: { 
+      type: String, 
+      required: true,
+      minlength: [2, 'Name must be at least 2 characters'],
+      maxlength: [50, 'Name cannot exceed 50 characters']
+    },
+    email: { 
+      type: String, 
+      required: true, 
+      unique: true, 
+      lowercase: true,
+      validate: {
+        validator: function(v) {
+          return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v);
+        },
+        message: 'Please enter a valid email'
+      }
+    },
+    password: { 
+      type: String, 
+      required: true,
+      minlength: [6, 'Password must be at least 6 characters']
+    },
     userType: { 
       type: String, 
       required: true, 
       enum: ['patient', 'therapist'],
-      default: 'patient'
+      default: 'patient',
+      immutable: true // Cannot change user type after creation
+    },
+    active: {
+      type: Boolean,
+      default: true
+    },
+    lastLogin: {
+      type: Date
     }
   },
   { 
     timestamps: true,
-    discriminatorKey: 'userType' // Enable inheritance
+    discriminatorKey: 'userType',
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
 
-// Hash password before saving
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 10);
+// Encapsulation: Password hashing logic as a method
+userSchema.methods.hashPassword = async function() {
+  return await bcrypt.hash(this.password, 10);
+};
+
+// Middleware: Hash password before saving
+userSchema.pre('save', async function(next) {
+  if (this.isModified('password')) {
+    this.password = await this.hashPassword();
+  }
   next();
 });
 
-// Instance method to compare passwords
-userSchema.methods.comparePassword = function (plain) {
-  return bcrypt.compare(plain, this.password);
+// Instance method for secure password comparison
+userSchema.methods.comparePassword = async function(plainPassword) {
+  return await bcrypt.compare(plainPassword, this.password);
 };
 
-// Abstract method to be overridden by subclasses
+// Abstract method (to be implemented by subclasses)
 userSchema.methods.getProfileData = function() {
   throw new Error('getProfileData must be implemented by subclass');
 };
 
-// Factory method to create appropriate user type
-userSchema.statics.createUser = function(userData) {
-  const { userType } = userData;
-  if (userType === 'therapist') {
-    return new Therapist(userData);
-  } else {
-    return new Patient(userData);
-  }
+// Abstract method for notifications
+userSchema.methods.sendNotification = function() {
+  throw new Error('sendNotification must be implemented by subclass');
+};
+
+// Static factory method for creating user instances
+userSchema.statics.createUser = async function(userData) {
+  const UserModel = this.discriminators[userData.userType] || this;
+  return new UserModel(userData);
+};
+
+// Virtual for full name (demonstration of computed property)
+userSchema.virtual('fullName').get(function() {
+  return `${this.name}`;
+});
+
+// Instance method for updating profile
+userSchema.methods.updateProfile = async function(updateData) {
+  const allowedUpdates = ['name', 'email'];
+  Object.keys(updateData).forEach(key => {
+    if (allowedUpdates.includes(key)) {
+      this[key] = updateData[key];
+    }
+  });
+  return this.save();
+};
+
+// Static method for finding active users
+userSchema.statics.findActive = function() {
+  return this.find({ active: true });
 };
 
 const User = mongoose.model('User', userSchema);
@@ -81,7 +145,10 @@ const Patient = User.discriminator('patient', patientSchema);
 const therapistSchema = new mongoose.Schema({
   specialties: [{ type: String, trim: true }],
   languages: [{ type: String, trim: true }],
-  rate: { type: Number, required: true, min: 0, default: 0 },
+  rate: {
+    amount: { type: Number, required: true, min: 0, default: 0 },
+    currency: { type: String, required: true, default: 'USD' }
+  },
   bio: { type: String, maxlength: 2000, trim: true },
   qualifications: [{ 
     degree: { type: String, trim: true },
