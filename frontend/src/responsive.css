@@ -1,0 +1,288 @@
+/* Enhanced responsive styles for better large screen compatibility */
+
+/* Remove any default margins/padding that might cause width issues */
+body, html {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+#root {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Hero section responsive improvements */
+.hero-section {
+  min-height: 65vh;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.hero-section .container {
+  padding: 2rem 1rem !important;
+}
+
+/* Quick search box enhancements - subtle and functional */
+.hero-section .card {
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.hero-section .card:hover {
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+  transform: translateY(-2px);
+}
+
+@media (min-width: 1200px) {
+  .hero-section {
+    min-height: 70vh;
+  }
+  
+  .hero-section .container {
+    padding: 2.5rem 2rem !important;
+  }
+}
+
+@media (min-width: 1400px) {
+  .hero-section {
+    min-height: 75vh;
+  }
+  
+  .hero-section .container {
+    padding: 3rem 2rem !important;
+  }
+}
+
+/* Feature cards hover effects */
+.feature-card {
+  transition: all 0.3s ease !important;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px) !important;
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Therapist cards responsive grid */
+@media (min-width: 1400px) {
+  .therapist-grid-container {
+    max-width: 1600px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .therapist-grid-container {
+    max-width: 1800px;
+  }
+}
+
+/* Typography responsive scaling */
+@media (min-width: 1200px) {
+  .display-1 {
+    font-size: calc(1.625rem + 4.5vw) !important;
+  }
+  
+  .display-4 {
+    font-size: calc(1.375rem + 1.5vw) !important;
+  }
+}
+
+/* Container responsive improvements */
+@media (min-width: 1400px) {
+  .container-xxl {
+    max-width: 1400px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .container-fluid {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Search bar improvements */
+.search-widget {
+  backdrop-filter: blur(15px) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+}
+
+/* Button hover improvements */
+.btn {
+  transition: all 0.3s ease !important;
+}
+
+.btn:hover {
+  transform: translateY(-2px) !important;
+}
+
+/* Card hover effects */
+.card {
+  transition: all 0.3s ease !important;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Testimonials section improvements */
+.testimonials-bg {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+}
+
+/* Large screen spacing improvements */
+@media (min-width: 1400px) {
+  .py-5 {
+    padding-top: 4rem !important;
+    padding-bottom: 4rem !important;
+  }
+  
+  .mb-5 {
+    margin-bottom: 4rem !important;
+  }
+  
+  .g-4 {
+    --bs-gutter-x: 2rem;
+    --bs-gutter-y: 2rem;
+  }
+}
+
+/* Ultra-wide screen improvements */
+@media (min-width: 1800px) {
+  .hero-section {
+    padding: 8rem 0 !important;
+  }
+  
+  .py-5 {
+    padding-top: 5rem !important;
+    padding-bottom: 5rem !important;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus improvements for accessibility */
+.btn:focus,
+.card:focus {
+  outline: 2px solid #0d6efd !important;
+  outline-offset: 2px !important;
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.6s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.8s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Badge improvements */
+.badge {
+  transition: all 0.3s ease !important;
+}
+
+.badge:hover {
+  transform: scale(1.05) !important;
+  opacity: 0.9 !important;
+}
+
+/* Therapist card grid optimization for different screen sizes */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  /* 3 cards per row on large screens */
+  .therapist-card-wrapper {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+  }
+}
+
+@media (min-width: 1400px) and (max-width: 1599px) {
+  /* 4 cards per row on extra large screens */
+  .therapist-card-wrapper {
+    flex: 0 0 25%;
+    max-width: 25%;
+  }
+}
+
+@media (min-width: 1600px) {
+  /* 5 cards per row on ultra-wide screens */
+  .therapist-card-wrapper {
+    flex: 0 0 20%;
+    max-width: 20%;
+  }
+}
+
+/* Form improvements */
+.form-control, .form-select {
+  transition: all 0.3s ease !important;
+  border-radius: 0.5rem !important;
+}
+
+.form-control:focus, .form-select:focus {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.15) !important;
+}
+
+/* Search bar responsive improvements */
+@media (min-width: 1200px) {
+  .search-bar-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 1400px) {
+  .search-bar-container {
+    max-width: 1000px;
+  }
+}
+
+/* Navigation improvements for large screens */
+@media (min-width: 1200px) {
+  .navbar-nav .nav-link {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+}
+
+/* Loading spinner improvements */
+.spinner-border {
+  animation: spinner-border 0.75s linear infinite !important;
+}
+
+/* Enhanced text readability on large screens */
+@media (min-width: 1400px) {
+  .lead {
+    font-size: 1.35rem !important;
+    font-weight: 300 !important;
+    line-height: 1.6 !important;
+  }
+}
