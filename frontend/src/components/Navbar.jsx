@@ -139,7 +139,7 @@ const Navbar = () => {
                   sx={{ ml: 1 }}
                 >
                   <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
-                    {user.name.charAt(0).toUpperCase()}
+                    {user?.name ? user.name.charAt(0).toUpperCase() : ''}
                   </Avatar>
                 </IconButton>
               </Tooltip>
@@ -175,10 +175,10 @@ const Navbar = () => {
                     Signed in as
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                    {user.name}
+                    {user?.name || 'User'}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {user.userType.charAt(0).toUpperCase() + user.userType.slice(1)}
+                    {user?.userType ? user.userType.charAt(0).toUpperCase() + user.userType.slice(1) : ''}
                   </Typography>
                 </Box>
                 
@@ -189,7 +189,7 @@ const Navbar = () => {
                   My Profile
                 </MenuItem>
                 
-                {user.userType === 'patient' && (
+                {user?.userType === 'patient' && (
                   <>
                     <MenuItem onClick={() => handleNavigation('/bookings')}>
                       <Schedule sx={{ mr: 2 }} />
@@ -198,7 +198,7 @@ const Navbar = () => {
                   </>
                 )}
                 
-                {user.userType === 'therapist' && (
+                {user?.userType === 'therapist' && (
                   <>
                     <MenuItem onClick={() => handleNavigation('/therapist/dashboard')}>
                       <Dashboard sx={{ mr: 2 }} />

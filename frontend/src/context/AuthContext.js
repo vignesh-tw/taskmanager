@@ -67,8 +67,9 @@ export const AuthProvider = ({ children }) => {
   const signIn = async (credentials) => {
     try {
       const response = await axiosInstance.post('/api/auth/login', credentials);
-      login(response.data);
-      return { success: true, data: response.data };
+      // Make sure we're passing the user data correctly to the login function
+      login(response.data.data.user);
+      return { success: true, data: response.data.data };
     } catch (error) {
       const status = error.response?.status;
       const backendMsg = error.response?.data?.message;

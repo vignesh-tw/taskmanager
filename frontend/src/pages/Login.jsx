@@ -62,7 +62,7 @@ const Login = () => {
     
     if (result.success) {
       // Redirect based on user type
-      if (result.data.userType === 'therapist') {
+      if (result.data.user.userType === 'therapist') {
         navigate('/therapist/dashboard');
       } else {
         navigate('/');
