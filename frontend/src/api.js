@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const BASE = process.env.REACT_APP_API_URL || 'http://localhost:5003';
 
 export async function req(path, method = 'GET', body, auth = true) {
   const headers = { 'Content-Type': 'application/json' };
