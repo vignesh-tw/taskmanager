@@ -1,109 +1,135 @@
-import { useEffect, useState } from 'react';
-import { listTherapists, createTherapist, updateTherapist, deleteTherapist } from '../api';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Container, Row, Col, Spinner, Alert } from 'react-bootstrap';
+import SearchBar from '../components/SearchBar';
+import TherapistCard from '../components/TherapistCard';
 
 export default function Therapists() {
-  const [items, setItems] = useState([]);
-  const [form, setForm] = useState({ name:'', rate:100, specialties:'', languages:'', bio:'' });
-  const [editing, setEditing] = useState(null);
-  const [msg, setMsg] = useState('');
+  const [therapists, setTherapists] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
-  const load = async () => { try { setItems(await listTherapists()); } catch(e){ setMsg(e.message);} };
-  useEffect(()=>{ load(); }, []);
+  // Load all therapists on component mount
+  useEffect(() => {
+    loadAllTherapists();
+  }, []);
 
-  const toArrays = (s) => s ? s.split(',').map(x=>x.trim()).filter(Boolean) : [];
-
-  const add = async (e) => {
-    e.preventDefault();
+  const loadAllTherapists = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      await createTherapist({
-        name: form.name,
-        rate: Number(form.rate)||0,
-        specialties: toArrays(form.specialties),
-        languages: toArrays(form.languages),
-        bio: form.bio
-      });
-      setForm({ name:'', rate:100, specialties:'', languages:'', bio:'' });
-      setMsg('Created'); load();
-    } catch(e){ setMsg(e.message); }
+      const response = await axios.get('/api/therapists');
+      const therapistData = response.data.data || [];
+      setTherapists(Array.isArray(therapistData) ? therapistData : []);
+    } catch (err) {
+      console.error('Error loading therapists:', err);
+      setError('Failed to load therapists');
+      setTherapists([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const save = async (it) => {
+  const handleSearch = async (searchParams) => {
+    setLoading(true);
+    setError(null);
+    setHasSearched(true);
+    
     try {
-      await updateTherapist(it._id, {
-        name: it.name,
-        rate: Number(it.rate)||0,
-        specialties: toArrays(it._specialties),
-        languages: toArrays(it._languages),
-        bio: it.bio
+      const response = await axios.get('/api/therapists', {
+        params: searchParams
       });
-      setEditing(null); setMsg('Updated'); load();
-    } catch(e){ setMsg(e.message); }
+      const results = response.data.data || [];
+      setSearchResults(Array.isArray(results) ? results : []);
+    } catch (err) {
+      console.error('Search error:', err);
+      setError('Search failed. Please try again.');
+      setSearchResults([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const ask = (message) => typeof window !== 'undefined' ? window.confirm(message) : false;
-  const removeItem = async (id) => {
-    if (!ask('Delete therapist?')) return;
-    try { await deleteTherapist(id); setMsg('Deleted'); load(); }
-    catch(e){ setMsg(e.message); }
-  };
+  const displayedTherapists = hasSearched ? searchResults : therapists;
 
   return (
-    <div style={{padding:16}}>
-      <h2>Therapists</h2>
-      {msg && <div style={{background:'#eef',padding:8,margin:'8px 0'}}>{msg}</div>}
+    <div className="py-4" style={{ marginTop: '70px' }}>
+      <Container fluid style={{ maxWidth: '1400px' }}>
+        {/* Header */}
+        <div className="mb-4">
+          <h1 className="display-4 fw-bold mb-3">
+            Find Your Therapist
+          </h1>
+          <p className="lead text-muted mb-4">
+            Browse and search through our network of qualified mental health professionals
+          </p>
+        </div>
 
-      {/* Add form */}
-      <form onSubmit={add} style={{display:'grid',gap:8,maxWidth:520,marginBottom:16}}>
-        <input placeholder="Name" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required />
-        <input type="number" placeholder="Rate" value={form.rate} onChange={e=>setForm({...form,rate:e.target.value})} />
-        <input placeholder="Specialties (comma-separated)" value={form.specialties} onChange={e=>setForm({...form,specialties:e.target.value})} />
-        <input placeholder="Languages (comma-separated)" value={form.languages} onChange={e=>setForm({...form,languages:e.target.value})} />
-        <textarea placeholder="Bio" value={form.bio} onChange={e=>setForm({...form,bio:e.target.value})} />
-        <button>Add Therapist</button>
-      </form>
+      {/* Search Bar */}
+      <div className="mb-4 search-bar-container">
+        <SearchBar onSearch={handleSearch} loading={loading} />
+      </div>
 
-      {/* List + inline edit */}
-      <table style={{width:'100%',borderCollapse:'collapse'}}>
-        <thead>
-          <tr><th align="left">Name</th><th>Rate</th><th>Specialties</th><th>Languages</th><th>Actions</th></tr>
-        </thead>
-        <tbody>
-          {items.map(t=>{
-            const isEdit = editing === t._id;
-            return (
-              <tr key={t._id} style={{borderTop:'1px solid #eee'}}>
-                <td>{isEdit
-                  ? <input value={t.name} onChange={e=>setItems(items.map(x=>x._id===t._id?{...x,name:e.target.value}:x))}/>
-                  : t.name}</td>
-                <td align="center">{isEdit
-                  ? <input type="number" style={{width:80}} value={t.rate} onChange={e=>setItems(items.map(x=>x._id===t._id?{...x,rate:e.target.value}:x))}/>
-                  : `$${t.rate}`}</td>
-                <td>{isEdit
-                  ? <input placeholder="a,b,c" value={t._specialties ?? (t.specialties||[]).join(', ')}
-                           onChange={e=>setItems(items.map(x=>x._id===t._id?{...x,_specialties:e.target.value}:x))}/>
-                  : (t.specialties||[]).join(', ')}</td>
-                <td>{isEdit
-                  ? <input placeholder="en,th" value={t._languages ?? (t.languages||[]).join(', ')}
-                           onChange={e=>setItems(items.map(x=>x._id===t._id?{...x,_languages:e.target.value}:x))}/>
-                  : (t.languages||[]).join(', ')}</td>
-                <td align="center" style={{whiteSpace:'nowrap'}}>
-                  {!isEdit ? (
-                    <>
-                      <button onClick={()=>setEditing(t._id)}>Edit</button>{' '}
-                      <button onClick={()=>removeItem(t._id)} style={{color:'crimson'}}>Delete</button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={()=>save(t)}>Save</button>{' '}
-                      <button onClick={()=>setEditing(null)}>Cancel</button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      {/* Error Message */}
+      {error && (
+        <Alert variant="danger" className="mb-3">
+          {error}
+        </Alert>
+      )}
+
+      {/* Results Header */}
+      {hasSearched && (
+        <div className="mb-3">
+          <h3 className="mb-2">
+            {loading ? 'Searching...' : 
+             displayedTherapists.length > 0 ? 
+               `Found ${displayedTherapists.length} therapist${displayedTherapists.length !== 1 ? 's' : ''}` :
+               'No therapists found'
+            }
+          </h3>
+          {displayedTherapists.length === 0 && !loading && (
+            <p className="text-muted">
+              Try adjusting your search criteria or browse all available therapists.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="d-flex justify-content-center py-5">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        </div>
+      )}
+
+      {/* Therapist Grid */}
+      {!loading && (
+        <Row className="g-4">
+          {displayedTherapists.map((therapist) => (
+            <Col xs={12} sm={6} lg={4} xl={3} className="therapist-card-wrapper" key={therapist.id}>
+              <TherapistCard therapist={therapist} />
+            </Col>
+          ))}
+        </Row>
+      )}
+
+      {/* Empty State */}
+      {!loading && displayedTherapists.length === 0 && !hasSearched && (
+        <div className="text-center py-5">
+          <h4 className="text-muted mb-3">
+            No therapists available at the moment
+          </h4>
+          <p className="text-muted">
+            Please check back later or contact support for assistance.
+          </p>
+        </div>
+      )}
+      </Container>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import TherapistDashboard from './pages/TherapistDashboard';
 import Therapist from './pages/Therapist';
+import TherapistProfilePage from './pages/TherapistProfilePage';
 import Slot from './pages/Slot';
 import Booking from './pages/Booking';
 import Profile from './pages/Profile';
@@ -21,34 +22,37 @@ function App() {
       <CssBaseline />
       <AuthProvider>
         <Router>
-          <div className="App">
+          <div className="App" style={{ margin: 0, padding: 0, width: '100%' }}>
             <Navbar />
-            <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route 
-                  path="/therapist/dashboard" 
-                  element={
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Container maxWidth="sm" sx={{ mt: 4, mb: 4 }}><Login /></Container>} />
+              <Route path="/signup" element={<Container maxWidth="sm" sx={{ mt: 4, mb: 4 }}><SignUp /></Container>} />
+              <Route 
+                path="/therapist/dashboard" 
+                element={
+                  <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
                     <ProtectedRoute requiredRole="therapist">
                       <TherapistDashboard />
                     </ProtectedRoute>
-                  } 
-                />
-                <Route path="/therapists" element={<Therapist />} />
-                <Route path="/slots" element={<Slot />} />
-                <Route path="/bookings" element={<Booking />} />
-                <Route 
-                  path="/profile" 
-                  element={
+                  </Container>
+                } 
+              />
+              <Route path="/therapists" element={<Therapist />} />
+              <Route path="/therapist/:id" element={<TherapistProfilePage />} />
+              <Route path="/slots" element={<Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}><Slot /></Container>} />
+              <Route path="/bookings" element={<Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}><Booking /></Container>} />
+              <Route 
+                path="/profile" 
+                element={
+                  <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
                     <ProtectedRoute>
                       <Profile />
                     </ProtectedRoute>
-                  } 
-                />
-              </Routes>
-            </Container>
+                  </Container>
+                } 
+              />
+            </Routes>
           </div>
         </Router>
       </AuthProvider>
