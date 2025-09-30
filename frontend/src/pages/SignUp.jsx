@@ -116,7 +116,10 @@ const SignUp = () => {
 
       if (data.userType === 'therapist') {
         userData.specialties = data.specialties;
-        userData.rate = parseFloat(data.rate);
+        userData.rate = {
+          amount: parseFloat(data.rate),
+          currency: 'USD'
+        };
       }
 
       console.log('[SignUp] submitting', { ...userData, password: '***' });
