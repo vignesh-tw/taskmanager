@@ -40,8 +40,9 @@ export default function Therapists() {
     } catch(e){ setMsg(e.message); }
   };
 
+  const ask = (message) => typeof window !== 'undefined' ? window.confirm(message) : false;
   const removeItem = async (id) => {
-    if (!confirm('Delete therapist?')) return;
+    if (!ask('Delete therapist?')) return;
     try { await deleteTherapist(id); setMsg('Deleted'); load(); }
     catch(e){ setMsg(e.message); }
   };

@@ -34,8 +34,9 @@ export default function Slots() {
     } catch(e){ setMsg(e.message); }
   };
 
+  const ask = (m) => typeof window !== 'undefined' ? window.confirm(m) : false;
   const remove = async (id) => {
-    if (!confirm('Delete slot?')) return;
+    if (!ask('Delete slot?')) return;
     try { await deleteSlot(id); setMsg('Slot deleted'); loadSlots(); }
     catch(e){ setMsg(e.message); }
   };

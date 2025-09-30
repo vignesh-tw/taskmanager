@@ -7,8 +7,9 @@ export default function Bookings() {
   const load = async () => { try { setItems(await myBookings()); } catch(e){ setMsg(e.message); } };
   useEffect(()=>{ load(); }, []);
 
+  const ask = (m) => typeof window !== 'undefined' ? window.confirm(m) : false;
   const cancel = async (id) => {
-    if (!confirm('Cancel this booking?')) return;
+    if (!ask('Cancel this booking?')) return;
     try { await cancelBooking(id); setMsg('Canceled'); load(); }
     catch(e){ setMsg(e.message); }
   };
