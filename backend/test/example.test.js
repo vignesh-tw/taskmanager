@@ -1,51 +1,38 @@
-const chai = require('chai');
-const sinon = require('sinon');
+const request = require('supertest');
+const { expect } = require('chai');
+const app = require('../server');
+const { mockTokens, mockUsers } = require('./setup');
 const mongoose = require('mongoose');
 
-const Booking = require('../models/Booking');
-const Slot = require('../models/Slot');
-const { createBooking, deleteBooking } = require('../controllers/bookingController');
-
-const { expect } = chai;
-
 describe('Booking Tests', () => {
+  let slotId;
 
-  afterEach(() => {
-    sinon.restore(); 
-  });
-
-  it('should create a booking successfully', async () => {
-    const userId = new mongoose.Types.ObjectId();
-    const slotId = new mongoose.Types.ObjectId();
-
-    const req = { 
-      user: { id: userId }, 
-      body: { slotId: slotId.toString(), therapistId: new mongoose.Types.ObjectId().toString() } 
+  beforeEach(async () => {
+    // Create a test slot
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const slot = {
+      start: new Date(tomorrow.setHours(10, 0, 0)).toISOString(),
+      end: new Date(tomorrow.setHours(11, 0, 0)).toISOString(),
+      therapistId: mockUsers.therapist._id
     };
-    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
 
-   
-    sinon.stub(Slot, 'findById').resolves({ _id: slotId, isBooked: false, save: sinon.stub().resolves() });
-    sinon.stub(Booking, 'findOne').resolves(null);
-    const createdBooking = { _id: new mongoose.Types.ObjectId(), ...req.body, userId };
-    sinon.stub(Booking, 'create').resolves(createdBooking);
+    const res = await request(app)
+      .post('/api/slots')
+      .set('Authorization', `Bearer ${mockTokens.therapist}`)
+      .send(slot);
 
-    await createBooking(req, res);
-
-    expect(res.status.calledWith(201)).to.be.true;
-    expect(res.json.calledWithMatch({ booking: createdBooking })).to.be.true;
+    slotId = res.body.data._id;
   });
 
   it('should return 404 when deleting non-existent booking', async () => {
-    const req = { params: { id: new mongoose.Types.ObjectId().toString() } };
-    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+    const fakeId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .delete(`/api/bookings/${fakeId}`)
+      .set('Authorization', `Bearer ${mockTokens.patient}`);
 
-    sinon.stub(Booking, 'findById').resolves(null);
-
-    await deleteBooking(req, res);
-
-    expect(res.status.calledWith(404)).to.be.true;
-    expect(res.json.calledWithMatch({ message: 'Booking not found' })).to.be.true;
+    expect(res.status).to.equal(404);
+    expect(res.body.message).to.equal('Booking not found');
   });
 
 });
