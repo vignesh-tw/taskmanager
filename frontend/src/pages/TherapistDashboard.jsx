@@ -33,7 +33,9 @@ import {
   Star,
   Add,
   Delete,
-  Verified
+  Verified,
+  PhotoCamera,
+  Save
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
@@ -41,10 +43,24 @@ import axiosInstance from '../axiosConfig';
 const TherapistDashboard = () => {
   const { user, updateProfile } = useAuth();
   const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState({});
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const specialtyOptions = [
     'Anxiety', 'Depression', 'Relationship Counseling', 'Family Therapy',
@@ -58,33 +74,73 @@ const TherapistDashboard = () => {
   ];
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      const response = await axiosInstance.get('/api/therapists/me/profile');
-      setProfile(response.data);
-      setEditForm(response.data);
-    } catch (error) {
-      setError('Failed to fetch profile data');
-      console.error('Profile fetch error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Set mock profile data instead of fetching from API
+    const mockProfile = {
+      id: '123456',
+      name: user?.name || 'Dr. Sarah Johnson',
+      email: user?.email || 'sarah.johnson@example.com',
+      userType: 'therapist',
+      profilePicture: null,
+      bio: 'I am a licensed therapist with over 8 years of experience helping individuals and families overcome challenges and improve their mental health. I specialize in cognitive behavioral therapy and have a passion for helping people develop healthy coping strategies.',
+      specialties: [
+        'Cognitive Behavioral Therapy',
+        'Family Therapy',
+        'Anxiety Treatment',
+        'Depression Counseling'
+      ],
+      languages: ['English', 'Spanish'],
+      rate: {
+        amount: 150,
+        currency: 'USD'
+      },
+      experience: 8,
+      qualifications: [
+        {
+          degree: 'Ph.D. in Clinical Psychology',
+          institution: 'Stanford University',
+          year: '2015'
+        },
+        {
+          degree: 'M.A. in Counseling Psychology',
+          institution: 'UC Berkeley',
+          year: '2012'
+        }
+      ],
+      isVerified: true,
+      availability: {
+        monday: ['9:00 AM', '10:00 AM', '2:00 PM', '3:00 PM'],
+        tuesday: ['9:00 AM', '11:00 AM', '1:00 PM', '4:00 PM'],
+        wednesday: ['10:00 AM', '11:00 AM', '3:00 PM'],
+        thursday: ['9:00 AM', '2:00 PM', '3:00 PM', '4:00 PM'],
+        friday: ['9:00 AM', '10:00 AM', '11:00 AM'],
+        saturday: [],
+        sunday: []
+      }
+    };
+    
+    setProfile(mockProfile);
+    setEditForm(mockProfile);
+  }, [user]);
 
   const handleEditProfile = async () => {
     try {
-      const result = await updateProfile(editForm);
-      if (result.success) {
-        setProfile(result.data);
-        setEditDialogOpen(false);
-        setError('');
-      } else {
-        setError(result.error);
+      // Mock profile update - just update local state
+      let profileData = { ...editForm };
+      
+      if (selectedFile) {
+        // Mock file upload - just use the preview URL
+        profileData.profilePicture = previewUrl;
       }
+
+      // Simulate API delay
+      setTimeout(() => {
+        setProfile(profileData);
+        setEditDialogOpen(false);
+        setSelectedFile(null);
+        setPreviewUrl('');
+        setError('');
+        alert('Profile updated successfully! (Mock update)');
+      }, 500);
     } catch (error) {
       setError('Failed to update profile');
     }
@@ -136,18 +192,33 @@ const TherapistDashboard = () => {
         <Grid item xs={12} md={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <Avatar
-                sx={{
-                  width: 120,
-                  height: 120,
-                  mx: 'auto',
-                  mb: 2,
-                  bgcolor: 'primary.main',
-                  fontSize: '3rem'
-                }}
-              >
-                {profile.name.charAt(0).toUpperCase()}
-              </Avatar>
+              <Box sx={{ position: 'relative', width: 120, height: 120, mx: 'auto', mb: 2 }}>
+                <Avatar
+                  src={profile.profilePicture || previewUrl}
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    fontSize: '3rem'
+                  }}
+                >
+                  {profile.name.charAt(0).toUpperCase()}
+                </Avatar>
+                <IconButton
+                  color="primary"
+                  aria-label="upload picture"
+                  component="label"
+                  sx={{
+                    position: 'absolute',
+                    bottom: -8,
+                    right: -8,
+                    backgroundColor: 'background.paper',
+                    '&:hover': { backgroundColor: 'background.default' }
+                  }}
+                >
+                  <input hidden accept="image/*" type="file" onChange={handleFileSelect} />
+                  <PhotoCamera />
+                </IconButton>
+              </Box>
               
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
                 <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
@@ -163,7 +234,7 @@ const TherapistDashboard = () => {
               </Typography>
               
               <Chip
-                label={`$${profile.rate}/hour`}
+                label={`$${profile.rate?.amount || 0}/hour`}
                 color="primary"
                 sx={{ mb: 2 }}
               />
@@ -186,9 +257,27 @@ const TherapistDashboard = () => {
             {/* Bio */}
             <Grid item xs={12}>
               <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  Professional Bio
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
+                  <Typography variant="h6">
+                    Professional Bio
+                  </Typography>
+                  <Button
+                    startIcon={<Edit />}
+                    size="small"
+                    onClick={() => setEditDialogOpen(true)}
+                  >
+                    Edit Bio
+                  </Button>
+                </Box>
+                {profile.bio ? (
+                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {profile.bio}
+                  </Typography>
+                ) : (
+                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                    No bio added yet. Click Edit to add your professional bio.
+                  </Typography>
+                )}
                 <Typography variant="body1" sx={{ mb: 2 }}>
                   {profile.bio || 'No bio added yet. Click Edit Profile to add your professional background.'}
                 </Typography>
@@ -334,8 +423,8 @@ const TherapistDashboard = () => {
       >
         <DialogTitle>Edit Profile</DialogTitle>
         <DialogContent>
-          <Box sx={{ pt: 2 }}>
-            <Grid container spacing={2}>
+          <Box component="form" sx={{ mt: 2 }}>
+            <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
@@ -344,30 +433,16 @@ const TherapistDashboard = () => {
                   onChange={(e) => handleFormChange('name', e.target.value)}
                   margin="normal"
                 />
-              </Grid>
-              <Grid item xs={12} sm={6}>
+
                 <TextField
                   fullWidth
-                  label="Hourly Rate ($)"
-                  type="number"
-                  value={editForm.rate || ''}
-                  onChange={(e) => handleFormChange('rate', parseFloat(e.target.value))}
+                  label="Email"
+                  value={editForm.email || ''}
+                  onChange={(e) => handleFormChange('email', e.target.value)}
                   margin="normal"
+                  type="email"
                 />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Professional Bio"
-                  multiline
-                  rows={4}
-                  value={editForm.bio || ''}
-                  onChange={(e) => handleFormChange('bio', e.target.value)}
-                  margin="normal"
-                  placeholder="Tell potential clients about your background and approach..."
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
+
                 <FormControl fullWidth margin="normal">
                   <InputLabel>Specialties</InputLabel>
                   <Select
@@ -377,7 +452,7 @@ const TherapistDashboard = () => {
                     renderValue={(selected) => (
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                         {selected.map((value) => (
-                          <Chip key={value} label={value} size="small" />
+                          <Chip key={value} label={value} />
                         ))}
                       </Box>
                     )}
@@ -389,8 +464,7 @@ const TherapistDashboard = () => {
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
+
                 <FormControl fullWidth margin="normal">
                   <InputLabel>Languages</InputLabel>
                   <Select
@@ -400,7 +474,7 @@ const TherapistDashboard = () => {
                     renderValue={(selected) => (
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                         {selected.map((value) => (
-                          <Chip key={value} label={value} size="small" />
+                          <Chip key={value} label={value} />
                         ))}
                       </Box>
                     )}
@@ -412,15 +486,66 @@ const TherapistDashboard = () => {
                     ))}
                   </Select>
                 </FormControl>
+
+                <TextField
+                  fullWidth
+                  label="Hourly Rate (USD)"
+                  value={editForm.rate?.amount || ''}
+                  onChange={(e) => handleFormChange('rate', { ...editForm.rate, amount: Number(e.target.value) })}
+                  margin="normal"
+                  type="number"
+                />
               </Grid>
+
               <Grid item xs={12} sm={6}>
+                <Box sx={{ textAlign: 'center', mb: 2 }}>
+                  <Box sx={{ position: 'relative', width: 150, height: 150, mx: 'auto' }}>
+                    <Avatar
+                      src={previewUrl || editForm.profilePicture}
+                      sx={{
+                        width: '100%',
+                        height: '100%',
+                        fontSize: '4rem'
+                      }}
+                    >
+                      {editForm.name?.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <IconButton
+                      color="primary"
+                      aria-label="upload picture"
+                      component="label"
+                      sx={{
+                        position: 'absolute',
+                        bottom: -8,
+                        right: -8,
+                        backgroundColor: 'background.paper',
+                        '&:hover': { backgroundColor: 'background.default' }
+                      }}
+                    >
+                      <input hidden accept="image/*" type="file" onChange={handleFileSelect} />
+                      <PhotoCamera />
+                    </IconButton>
+                  </Box>
+                </Box>
+
+                <TextField
+                  fullWidth
+                  label="Professional Bio"
+                  value={editForm.bio || ''}
+                  onChange={(e) => handleFormChange('bio', e.target.value)}
+                  margin="normal"
+                  multiline
+                  rows={4}
+                  placeholder="Tell us about your experience, approach, and specialties..."
+                />
+
                 <TextField
                   fullWidth
                   label="Years of Experience"
-                  type="number"
                   value={editForm.experience || ''}
-                  onChange={(e) => handleFormChange('experience', parseInt(e.target.value))}
+                  onChange={(e) => handleFormChange('experience', Number(e.target.value))}
                   margin="normal"
+                  type="number"
                 />
               </Grid>
             </Grid>
@@ -430,7 +555,7 @@ const TherapistDashboard = () => {
           <Button onClick={() => setEditDialogOpen(false)}>
             Cancel
           </Button>
-          <Button onClick={handleEditProfile} variant="contained">
+          <Button onClick={handleEditProfile} variant="contained" startIcon={<Save />}>
             Save Changes
           </Button>
         </DialogActions>
