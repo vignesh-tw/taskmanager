@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -8,23 +8,18 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
-} from '@mui/material';
+  MenuItem,
+} from "@mui/material";
 
 const SlotEditDialog = ({
   open,
   onClose,
   onSave,
   selectedStatus,
-  onStatusChange
+  onStatusChange,
 }) => {
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-    >
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Edit Time Slot</DialogTitle>
       <DialogContent>
         <FormControl fullWidth sx={{ mt: 2 }}>
@@ -40,9 +35,7 @@ const SlotEditDialog = ({
         </FormControl>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>
-          Cancel
-        </Button>
+        <Button onClick={onClose}>Cancel</Button>
         <Button onClick={onSave} variant="contained" color="primary">
           Save
         </Button>

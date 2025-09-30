@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -14,9 +14,9 @@ import {
   Box,
   Chip,
   Avatar,
-  IconButton
-} from '@mui/material';
-import { Save, PhotoCamera } from '@mui/icons-material';
+  IconButton,
+} from "@mui/material";
+import { Save, PhotoCamera } from "@mui/icons-material";
 
 const ProfileEditDialog = ({
   open,
@@ -27,19 +27,14 @@ const ProfileEditDialog = ({
   specialtyOptions,
   languageOptions,
   onPhotoSelect,
-  previewUrl
+  previewUrl,
 }) => {
   const handleChange = (field, value) => {
     onChange(field, value);
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-    >
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Edit Profile</DialogTitle>
       <DialogContent>
         <Box component="form" sx={{ mt: 2 }}>
@@ -48,16 +43,16 @@ const ProfileEditDialog = ({
               <TextField
                 fullWidth
                 label="Name"
-                value={form.name || ''}
-                onChange={(e) => handleChange('name', e.target.value)}
+                value={form.name || ""}
+                onChange={(e) => handleChange("name", e.target.value)}
                 margin="normal"
               />
 
               <TextField
                 fullWidth
                 label="Email"
-                value={form.email || ''}
-                onChange={(e) => handleChange('email', e.target.value)}
+                value={form.email || ""}
+                onChange={(e) => handleChange("email", e.target.value)}
                 margin="normal"
                 type="email"
               />
@@ -67,9 +62,9 @@ const ProfileEditDialog = ({
                 <Select
                   multiple
                   value={form.specialties || []}
-                  onChange={(e) => handleChange('specialties', e.target.value)}
+                  onChange={(e) => handleChange("specialties", e.target.value)}
                   renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                       {selected.map((value) => (
                         <Chip key={value} label={value} />
                       ))}
@@ -89,9 +84,9 @@ const ProfileEditDialog = ({
                 <Select
                   multiple
                   value={form.languages || []}
-                  onChange={(e) => handleChange('languages', e.target.value)}
+                  onChange={(e) => handleChange("languages", e.target.value)}
                   renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                       {selected.map((value) => (
                         <Chip key={value} label={value} />
                       ))}
@@ -109,22 +104,34 @@ const ProfileEditDialog = ({
               <TextField
                 fullWidth
                 label="Hourly Rate (USD)"
-                value={form.rate?.amount || ''}
-                onChange={(e) => handleChange('rate', { ...form.rate, amount: Number(e.target.value) })}
+                value={form.rate?.amount || ""}
+                onChange={(e) =>
+                  handleChange("rate", {
+                    ...form.rate,
+                    amount: Number(e.target.value),
+                  })
+                }
                 margin="normal"
                 type="number"
               />
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <Box sx={{ textAlign: 'center', mb: 2 }}>
-                <Box sx={{ position: 'relative', width: 150, height: 150, mx: 'auto' }}>
+              <Box sx={{ textAlign: "center", mb: 2 }}>
+                <Box
+                  sx={{
+                    position: "relative",
+                    width: 150,
+                    height: 150,
+                    mx: "auto",
+                  }}
+                >
                   <Avatar
                     src={previewUrl || form.profilePicture}
                     sx={{
-                      width: '100%',
-                      height: '100%',
-                      fontSize: '4rem'
+                      width: "100%",
+                      height: "100%",
+                      fontSize: "4rem",
                     }}
                   >
                     {form.name?.charAt(0).toUpperCase()}
@@ -134,14 +141,19 @@ const ProfileEditDialog = ({
                     aria-label="upload picture"
                     component="label"
                     sx={{
-                      position: 'absolute',
+                      position: "absolute",
                       bottom: -8,
                       right: -8,
-                      backgroundColor: 'background.paper',
-                      '&:hover': { backgroundColor: 'background.default' }
+                      backgroundColor: "background.paper",
+                      "&:hover": { backgroundColor: "background.default" },
                     }}
                   >
-                    <input hidden accept="image/*" type="file" onChange={onPhotoSelect} />
+                    <input
+                      hidden
+                      accept="image/*"
+                      type="file"
+                      onChange={onPhotoSelect}
+                    />
                     <PhotoCamera />
                   </IconButton>
                 </Box>
@@ -150,8 +162,8 @@ const ProfileEditDialog = ({
               <TextField
                 fullWidth
                 label="Professional Bio"
-                value={form.bio || ''}
-                onChange={(e) => handleChange('bio', e.target.value)}
+                value={form.bio || ""}
+                onChange={(e) => handleChange("bio", e.target.value)}
                 margin="normal"
                 multiline
                 rows={4}
@@ -161,8 +173,10 @@ const ProfileEditDialog = ({
               <TextField
                 fullWidth
                 label="Years of Experience"
-                value={form.experience || ''}
-                onChange={(e) => handleChange('experience', Number(e.target.value))}
+                value={form.experience || ""}
+                onChange={(e) =>
+                  handleChange("experience", Number(e.target.value))
+                }
                 margin="normal"
                 type="number"
               />
@@ -171,9 +185,7 @@ const ProfileEditDialog = ({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>
-          Cancel
-        </Button>
+        <Button onClick={onClose}>Cancel</Button>
         <Button onClick={onSave} variant="contained" startIcon={<Save />}>
           Save Changes
         </Button>

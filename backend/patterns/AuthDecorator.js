@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const { promisify } = require('util');
+const jwt = require("jsonwebtoken");
+const { promisify } = require("util");
 
 /**
  * Decorator Pattern implementation for JWT authentication
@@ -22,18 +22,18 @@ class AuthenticationDecorator extends ControllerDecorator {
   async execute(req, res, next) {
     try {
       // Check for token in headers
-      const token = req.headers.authorization?.split(' ')[1];
+      const token = req.headers.authorization?.split(" ")[1];
       if (!token) {
         return res.status(401).json({
-          status: 'error',
-          message: 'Authentication required'
+          status: "error",
+          message: "Authentication required",
         });
       }
 
       // Verify token
       const decoded = await promisify(jwt.verify)(
         token,
-        process.env.JWT_SECRET
+        process.env.JWT_SECRET,
       );
 
       // Add user info to request
@@ -42,21 +42,21 @@ class AuthenticationDecorator extends ControllerDecorator {
       // Call the wrapped controller
       return this.controller.execute(req, res, next);
     } catch (error) {
-      if (error.name === 'JsonWebTokenError') {
+      if (error.name === "JsonWebTokenError") {
         return res.status(401).json({
-          status: 'error',
-          message: 'Invalid token'
+          status: "error",
+          message: "Invalid token",
         });
       }
-      if (error.name === 'TokenExpiredError') {
+      if (error.name === "TokenExpiredError") {
         return res.status(401).json({
-          status: 'error',
-          message: 'Token expired'
+          status: "error",
+          message: "Token expired",
         });
       }
       return res.status(500).json({
-        status: 'error',
-        message: 'Authentication error'
+        status: "error",
+        message: "Authentication error",
       });
     }
   }
@@ -73,23 +73,23 @@ class RoleAuthorizationDecorator extends ControllerDecorator {
     try {
       if (!req.user) {
         return res.status(401).json({
-          status: 'error',
-          message: 'Authentication required'
+          status: "error",
+          message: "Authentication required",
         });
       }
 
       if (!this.allowedRoles.includes(req.user.userType)) {
         return res.status(403).json({
-          status: 'error',
-          message: 'Unauthorized access'
+          status: "error",
+          message: "Unauthorized access",
         });
       }
 
       return this.controller.execute(req, res, next);
     } catch (error) {
       return res.status(500).json({
-        status: 'error',
-        message: 'Authorization error'
+        status: "error",
+        message: "Authorization error",
       });
     }
   }
@@ -106,29 +106,34 @@ class ResourceOwnerDecorator extends ControllerDecorator {
     try {
       if (!req.user) {
         return res.status(401).json({
-          status: 'error',
-          message: 'Authentication required'
+          status: "error",
+          message: "Authentication required",
         });
       }
 
       // Get resource ID from request based on path
-      const resourceId = this.resourceIdPath.split('.').reduce((obj, key) => obj[key], req);
+      const resourceId = this.resourceIdPath
+        .split(".")
+        .reduce((obj, key) => obj[key], req);
 
       // Check if user owns the resource
-      const isOwner = await this.checkResourceOwnership(req.user.id, resourceId);
-      
+      const isOwner = await this.checkResourceOwnership(
+        req.user.id,
+        resourceId,
+      );
+
       if (!isOwner) {
         return res.status(403).json({
-          status: 'error',
-          message: 'Unauthorized access to resource'
+          status: "error",
+          message: "Unauthorized access to resource",
         });
       }
 
       return this.controller.execute(req, res, next);
     } catch (error) {
       return res.status(500).json({
-        status: 'error',
-        message: 'Resource authorization error'
+        status: "error",
+        message: "Resource authorization error",
       });
     }
   }
@@ -160,5 +165,5 @@ module.exports = {
   AuthenticationDecorator,
   RoleAuthorizationDecorator,
   ResourceOwnerDecorator,
-  composeDecorators
+  composeDecorators,
 };

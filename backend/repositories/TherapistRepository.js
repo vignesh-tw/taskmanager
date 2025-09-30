@@ -1,5 +1,5 @@
-const BaseRepository = require('./BaseRepository');
-const { Therapist } = require('../models/User');
+const BaseRepository = require("./BaseRepository");
+const { Therapist } = require("../models/User");
 
 /**
  * TherapistRepository implementing the Repository Pattern for Therapist-specific operations
@@ -13,10 +13,10 @@ class TherapistRepository extends BaseRepository {
    * Find therapists by specialty
    */
   async findBySpecialization(specialty) {
-    return this.find({ 
-      userType: 'therapist',
+    return this.find({
+      userType: "therapist",
       specialties: specialty,
-      active: true
+      active: true,
     });
   }
 
@@ -24,9 +24,9 @@ class TherapistRepository extends BaseRepository {
    * Find available therapists
    */
   async findAvailable() {
-    return this.find({ 
-      userType: 'therapist',
-      active: true
+    return this.find({
+      userType: "therapist",
+      active: true,
     });
   }
 
@@ -35,8 +35,8 @@ class TherapistRepository extends BaseRepository {
    */
   async updateAvailability(therapistId, availabilityData) {
     const therapist = await this.findById(therapistId);
-    if (!therapist) throw new Error('Therapist not found');
-    
+    if (!therapist) throw new Error("Therapist not found");
+
     therapist.availability = availabilityData;
     return therapist.save();
   }
@@ -46,10 +46,10 @@ class TherapistRepository extends BaseRepository {
    */
   async findByLocation(city, state) {
     return this.find({
-      'location.city': city,
-      'location.state': state,
+      "location.city": city,
+      "location.state": state,
       acceptingNewPatients: true,
-      active: true
+      active: true,
     });
   }
 
@@ -60,7 +60,7 @@ class TherapistRepository extends BaseRepository {
     return this.find({
       languages: language,
       acceptingNewPatients: true,
-      active: true
+      active: true,
     });
   }
 
@@ -69,17 +69,17 @@ class TherapistRepository extends BaseRepository {
    */
   async updateProfile(therapistId, profileData) {
     const allowedUpdates = [
-      'specialization',
-      'qualifications',
-      'experience',
-      'rate',
-      'location',
-      'languages'
+      "specialization",
+      "qualifications",
+      "experience",
+      "rate",
+      "location",
+      "languages",
     ];
 
     // Filter out non-allowed fields
     const updates = Object.keys(profileData)
-      .filter(key => allowedUpdates.includes(key))
+      .filter((key) => allowedUpdates.includes(key))
       .reduce((obj, key) => {
         obj[key] = profileData[key];
         return obj;
@@ -93,19 +93,20 @@ class TherapistRepository extends BaseRepository {
    */
   async search(query) {
     const criteria = {
-      userType: 'therapist',
+      userType: "therapist",
       $or: [
-        { name: { $regex: query, $options: 'i' } },
-        { specialties: { $regex: query, $options: 'i' } },
-        { languages: { $regex: query, $options: 'i' } },
-        { 'location.city': { $regex: query, $options: 'i' } },
-        { 'location.state': { $regex: query, $options: 'i' } }
+        { name: { $regex: query, $options: "i" } },
+        { specialties: { $regex: query, $options: "i" } },
+        { languages: { $regex: query, $options: "i" } },
+        { "location.city": { $regex: query, $options: "i" } },
+        { "location.state": { $regex: query, $options: "i" } },
       ],
-      active: true
+      active: true,
     };
 
-    const results = await this.model.find(criteria)
-      .select('-password')
+    const results = await this.model
+      .find(criteria)
+      .select("-password")
       .sort({ isVerified: -1, createdAt: -1 })
       .exec();
 

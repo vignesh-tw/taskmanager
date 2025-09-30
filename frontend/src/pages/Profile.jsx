@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Container,
   Paper,
@@ -10,23 +10,23 @@ import {
   Box,
   IconButton,
   Alert,
-  CircularProgress
-} from '@mui/material';
-import { PhotoCamera, Save } from '@mui/icons-material';
-import { useAuth } from '../context/AuthContext';
-import axiosInstance from '../axiosConfig';
+  CircularProgress,
+} from "@mui/material";
+import { PhotoCamera, Save } from "@mui/icons-material";
+import { useAuth } from "../context/AuthContext";
+import axiosInstance from "../axiosConfig";
 
 const Profile = () => {
   const { user, updateProfile } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState('');
+  const [previewUrl, setPreviewUrl] = useState("");
   const [form, setForm] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phoneNumber: user?.phoneNumber || '',
+    name: user?.name || "",
+    email: user?.email || "",
+    phoneNumber: user?.phoneNumber || "",
   });
 
   const handleFileSelect = (event) => {
@@ -42,40 +42,44 @@ const Profile = () => {
   };
 
   const handleChange = (field) => (event) => {
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
-      [field]: event.target.value
+      [field]: event.target.value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
       let profileData = { ...form };
-      
+
       if (selectedFile) {
         const formData = new FormData();
-        formData.append('profilePicture', selectedFile);
-        const uploadResponse = await axiosInstance.post('/api/users/upload-photo', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        formData.append("profilePicture", selectedFile);
+        const uploadResponse = await axiosInstance.post(
+          "/api/users/upload-photo",
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          },
+        );
         profileData.profilePicture = uploadResponse.data.url;
       }
 
       const result = await updateProfile(profileData);
       if (result.success) {
-        setSuccess('Profile updated successfully');
+        setSuccess("Profile updated successfully");
         setSelectedFile(null);
-        setPreviewUrl('');
+        setPreviewUrl("");
       } else {
         setError(result.error);
       }
     } catch (error) {
-      setError('Failed to update profile');
+      setError("Failed to update profile");
     } finally {
       setLoading(false);
     }
@@ -96,20 +100,36 @@ const Profile = () => {
           My Profile
         </Typography>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {success}
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit}>
           <Grid container spacing={4}>
             <Grid item xs={12} md={4}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Box sx={{ position: 'relative', width: 150, height: 150, mx: 'auto', mb: 2 }}>
+              <Box sx={{ textAlign: "center" }}>
+                <Box
+                  sx={{
+                    position: "relative",
+                    width: 150,
+                    height: 150,
+                    mx: "auto",
+                    mb: 2,
+                  }}
+                >
                   <Avatar
                     src={previewUrl || user.profilePicture}
                     sx={{
-                      width: '100%',
-                      height: '100%',
-                      fontSize: '3rem'
+                      width: "100%",
+                      height: "100%",
+                      fontSize: "3rem",
                     }}
                   >
                     {form.name.charAt(0).toUpperCase()}
@@ -119,14 +139,19 @@ const Profile = () => {
                     aria-label="upload picture"
                     component="label"
                     sx={{
-                      position: 'absolute',
+                      position: "absolute",
                       bottom: -8,
                       right: -8,
-                      backgroundColor: 'background.paper',
-                      '&:hover': { backgroundColor: 'background.default' }
+                      backgroundColor: "background.paper",
+                      "&:hover": { backgroundColor: "background.default" },
                     }}
                   >
-                    <input hidden accept="image/*" type="file" onChange={handleFileSelect} />
+                    <input
+                      hidden
+                      accept="image/*"
+                      type="file"
+                      onChange={handleFileSelect}
+                    />
                     <PhotoCamera />
                   </IconButton>
                 </Box>
@@ -143,7 +168,7 @@ const Profile = () => {
                     fullWidth
                     label="Name"
                     value={form.name}
-                    onChange={handleChange('name')}
+                    onChange={handleChange("name")}
                     required
                   />
                 </Grid>
@@ -152,7 +177,7 @@ const Profile = () => {
                     fullWidth
                     label="Email"
                     value={form.email}
-                    onChange={handleChange('email')}
+                    onChange={handleChange("email")}
                     type="email"
                     required
                   />
@@ -162,18 +187,20 @@ const Profile = () => {
                     fullWidth
                     label="Phone Number"
                     value={form.phoneNumber}
-                    onChange={handleChange('phoneNumber')}
+                    onChange={handleChange("phoneNumber")}
                   />
                 </Grid>
               </Grid>
             </Grid>
 
             <Grid item xs={12}>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
                 <Button
                   type="submit"
                   variant="contained"
-                  startIcon={loading ? <CircularProgress size={20} /> : <Save />}
+                  startIcon={
+                    loading ? <CircularProgress size={20} /> : <Save />
+                  }
                   disabled={loading}
                 >
                   Save Changes

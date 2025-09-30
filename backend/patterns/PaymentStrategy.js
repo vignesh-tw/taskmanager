@@ -6,11 +6,11 @@
 // Payment Strategy Interface
 class PaymentStrategy {
   async processPayment(amount, currency) {
-    throw new Error('processPayment method must be implemented');
+    throw new Error("processPayment method must be implemented");
   }
 
   async refundPayment(transactionId) {
-    throw new Error('refundPayment method must be implemented');
+    throw new Error("refundPayment method must be implemented");
   }
 }
 
@@ -28,7 +28,7 @@ class CreditCardPayment extends PaymentStrategy {
       success: true,
       transactionId: `CC-${Date.now()}`,
       amount,
-      currency
+      currency,
     };
   }
 
@@ -36,7 +36,7 @@ class CreditCardPayment extends PaymentStrategy {
     console.log(`Refunding credit card payment: ${transactionId}`);
     return {
       success: true,
-      refundId: `RF-${transactionId}`
+      refundId: `RF-${transactionId}`,
     };
   }
 }
@@ -54,7 +54,7 @@ class PayPalPayment extends PaymentStrategy {
       success: true,
       transactionId: `PP-${Date.now()}`,
       amount,
-      currency
+      currency,
     };
   }
 
@@ -62,7 +62,7 @@ class PayPalPayment extends PaymentStrategy {
     console.log(`Refunding PayPal payment: ${transactionId}`);
     return {
       success: true,
-      refundId: `RF-${transactionId}`
+      refundId: `RF-${transactionId}`,
     };
   }
 }
@@ -80,7 +80,7 @@ class BankTransferPayment extends PaymentStrategy {
       success: true,
       transactionId: `BT-${Date.now()}`,
       amount,
-      currency
+      currency,
     };
   }
 
@@ -88,7 +88,7 @@ class BankTransferPayment extends PaymentStrategy {
     console.log(`Refunding bank transfer: ${transactionId}`);
     return {
       success: true,
-      refundId: `RF-${transactionId}`
+      refundId: `RF-${transactionId}`,
     };
   }
 }
@@ -105,14 +105,14 @@ class PaymentProcessor {
 
   async processPayment(amount, currency) {
     if (!this.strategy) {
-      throw new Error('Payment strategy not set');
+      throw new Error("Payment strategy not set");
     }
     return this.strategy.processPayment(amount, currency);
   }
 
   async refundPayment(transactionId) {
     if (!this.strategy) {
-      throw new Error('Payment strategy not set');
+      throw new Error("Payment strategy not set");
     }
     return this.strategy.refundPayment(transactionId);
   }
@@ -122,11 +122,11 @@ class PaymentProcessor {
 class PaymentStrategyFactory {
   static createStrategy(type, credentials) {
     switch (type) {
-      case 'creditCard':
+      case "creditCard":
         return new CreditCardPayment(credentials);
-      case 'paypal':
+      case "paypal":
         return new PayPalPayment(credentials);
-      case 'bankTransfer':
+      case "bankTransfer":
         return new BankTransferPayment(credentials);
       default:
         throw new Error(`Unsupported payment type: ${type}`);
@@ -136,5 +136,5 @@ class PaymentStrategyFactory {
 
 module.exports = {
   PaymentProcessor,
-  PaymentStrategyFactory
+  PaymentStrategyFactory,
 };

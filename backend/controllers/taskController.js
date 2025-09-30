@@ -1,5 +1,5 @@
 // GET TaskFunction(Read):
-const Task = require('../models/Task');
+const Task = require("../models/Task");
 
 const getTasks = async (req, res) => {
   try {
@@ -12,9 +12,14 @@ const getTasks = async (req, res) => {
 
 // ADD TaskFunction:
 const addTask = async (req, res) => {
-const{ title, description, deadline } = req.body;
+  const { title, description, deadline } = req.body;
   try {
-    const task = await Task.create({userId: req.user.id,title,description,deadline});
+    const task = await Task.create({
+      userId: req.user.id,
+      title,
+      description,
+      deadline,
+    });
     res.status(201).json(task);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -27,11 +32,11 @@ const updateTask = async (req, res) => {
   const { title, description, completed, deadline } = req.body;
   try {
     const task = await Task.findById(req.params.id);
-    if (!task) return res.status(404).json({ message: 'Task not found' });
+    if (!task) return res.status(404).json({ message: "Task not found" });
 
     task.title = title ?? task.title;
     task.description = description ?? task.description;
-    task.completed = (completed !== undefined) ? completed : task.completed;
+    task.completed = completed !== undefined ? completed : task.completed;
     task.deadline = deadline ?? task.deadline;
 
     const updated = await task.save();
@@ -45,10 +50,10 @@ const updateTask = async (req, res) => {
 const deleteTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
-    if (!task) return res.status(404).json({ message: 'Task not found' });
+    if (!task) return res.status(404).json({ message: "Task not found" });
 
     await task.remove();
-    res.json({ message: 'Task deleted' });
+    res.json({ message: "Task deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

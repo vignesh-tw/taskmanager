@@ -6,11 +6,11 @@
 // Command interface
 class BookingCommand {
   execute() {
-    throw new Error('execute method must be implemented');
+    throw new Error("execute method must be implemented");
   }
 
   undo() {
-    throw new Error('undo method must be implemented');
+    throw new Error("undo method must be implemented");
   }
 }
 
@@ -28,13 +28,13 @@ class CreateBookingCommand extends BookingCommand {
       this.createdBooking = await this.bookingRepository.createBooking(
         this.bookingData.patient,
         this.bookingData.slot,
-        this.bookingData.paymentMethod
+        this.bookingData.paymentMethod,
       );
       return this.createdBooking;
     } catch (error) {
       // Ensure error has a status code
       if (!error.status) {
-        error.status = error.name === 'ValidationError' ? 400 : 500;
+        error.status = error.name === "ValidationError" ? 400 : 500;
       }
       throw error;
     }
@@ -45,7 +45,7 @@ class CreateBookingCommand extends BookingCommand {
     try {
       await this.bookingRepository.cancelBooking(this.createdBooking._id);
     } catch (error) {
-      console.error('Failed to undo booking creation:', error);
+      console.error("Failed to undo booking creation:", error);
     }
   }
 }
@@ -60,16 +60,21 @@ class CancelBookingCommand extends BookingCommand {
   }
 
   async execute() {
-    this.cancelledBooking = await this.bookingRepository.cancelBooking(this.bookingId, this.userId);
+    this.cancelledBooking = await this.bookingRepository.cancelBooking(
+      this.bookingId,
+      this.userId,
+    );
     return this.cancelledBooking;
   }
 
   async undo() {
     if (!this.cancelledBooking) return;
     try {
-      await this.bookingRepository.update(this.bookingId, { status: 'confirmed' });
+      await this.bookingRepository.update(this.bookingId, {
+        status: "confirmed",
+      });
     } catch (error) {
-      console.error('Failed to undo booking cancellation:', error);
+      console.error("Failed to undo booking cancellation:", error);
     }
   }
 }
@@ -103,5 +108,5 @@ class BookingCommandInvoker {
 module.exports = {
   CreateBookingCommand,
   CancelBookingCommand,
-  BookingCommandInvoker
+  BookingCommandInvoker,
 };

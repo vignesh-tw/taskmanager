@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Paper,
   Typography,
@@ -9,36 +9,32 @@ import {
   IconButton,
   Chip,
   Box,
-  Divider
-} from '@mui/material';
-import { Check, Close } from '@mui/icons-material';
+  Divider,
+} from "@mui/material";
+import { Check, Close } from "@mui/icons-material";
 
-const BookingsList = ({
-  bookings,
-  onAcceptBooking,
-  onRejectBooking
-}) => {
+const BookingsList = ({ bookings, onAcceptBooking, onRejectBooking }) => {
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pending':
-        return 'warning';
-      case 'accepted':
-        return 'success';
-      case 'rejected':
-        return 'error';
+      case "pending":
+        return "warning";
+      case "accepted":
+        return "success";
+      case "rejected":
+        return "error";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   const formatDateTime = (dateTime) => {
-    return new Date(dateTime).toLocaleString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit'
+    return new Date(dateTime).toLocaleString("en-US", {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
     });
   };
 
@@ -58,7 +54,7 @@ const BookingsList = ({
               <ListItem>
                 <ListItemText
                   primary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <span>{booking.patientName}</span>
                       <Chip
                         label={booking.status}
@@ -75,7 +71,7 @@ const BookingsList = ({
                     </>
                   }
                 />
-                {booking.status === 'pending' && (
+                {booking.status === "pending" && (
                   <ListItemSecondaryAction>
                     <IconButton
                       edge="end"

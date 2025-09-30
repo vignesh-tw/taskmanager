@@ -1,5 +1,5 @@
-const BaseRepository = require('./BaseRepository');
-const { User } = require('../models/User');
+const BaseRepository = require("./BaseRepository");
+const { User } = require("../models/User");
 
 /**
  * UserRepository implementing the Repository Pattern for User-related operations
@@ -38,7 +38,7 @@ class UserRepository extends BaseRepository {
     try {
       // Convert email to lowercase for consistent searching
       const lowercaseEmail = email.toLowerCase();
-      
+
       // Use the model from the base repository
       return await this.model.findOne({ email: lowercaseEmail });
     } catch (error) {
@@ -58,8 +58,8 @@ class UserRepository extends BaseRepository {
    */
   async updateProfile(userId, profileData) {
     const user = await this.findById(userId);
-    if (!user) throw new Error('User not found');
-    
+    if (!user) throw new Error("User not found");
+
     return user.updateProfile(profileData);
   }
 
@@ -68,10 +68,10 @@ class UserRepository extends BaseRepository {
    */
   async changePassword(userId, oldPassword, newPassword) {
     const user = await this.findById(userId);
-    if (!user) throw new Error('User not found');
+    if (!user) throw new Error("User not found");
 
     const isValidPassword = await user.comparePassword(oldPassword);
-    if (!isValidPassword) throw new Error('Invalid current password');
+    if (!isValidPassword) throw new Error("Invalid current password");
 
     user.password = newPassword;
     return user.save();

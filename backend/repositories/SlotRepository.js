@@ -1,5 +1,5 @@
-const BaseRepository = require('./BaseRepository');
-const Slot = require('../models/Slot');
+const BaseRepository = require("./BaseRepository");
+const Slot = require("../models/Slot");
 
 /**
  * SlotRepository implementing the Repository Pattern for Slot-specific operations
@@ -13,15 +13,18 @@ class SlotRepository extends BaseRepository {
    * Find available slots for a therapist
    */
   async findAvailableSlots(therapistId, startDate, endDate) {
-    return this.find({
-      therapist: therapistId,
-      start: { $gte: startDate },
-      end: { $lte: endDate },
-      isBooked: false,
-      status: 'available'
-    }, {
-      sort: { start: 1 }
-    });
+    return this.find(
+      {
+        therapist: therapistId,
+        start: { $gte: startDate },
+        end: { $lte: endDate },
+        isBooked: false,
+        status: "available",
+      },
+      {
+        sort: { start: 1 },
+      },
+    );
   }
 
   /**
@@ -44,8 +47,8 @@ class SlotRepository extends BaseRepository {
       $or: [
         { start: { $lt: end }, end: { $gt: start } },
         { start: { $gte: start, $lt: end } },
-        { end: { $gt: start, $lte: end } }
-      ]
+        { end: { $gt: start, $lte: end } },
+      ],
     });
   }
 
@@ -62,7 +65,7 @@ class SlotRepository extends BaseRepository {
   async findByTimeRange(startDate, endDate, options = {}) {
     const query = {
       start: { $gte: startDate },
-      end: { $lte: endDate }
+      end: { $lte: endDate },
     };
 
     if (options.therapistId) {
@@ -74,7 +77,7 @@ class SlotRepository extends BaseRepository {
 
     return this.find(query, {
       sort: { start: 1 },
-      populate: ['therapist']
+      populate: ["therapist"],
     });
   }
 
@@ -83,10 +86,10 @@ class SlotRepository extends BaseRepository {
    */
   async cancelSlot(slotId) {
     const slot = await this.findById(slotId);
-    if (!slot) throw new Error('Slot not found');
-    
+    if (!slot) throw new Error("Slot not found");
+
     slot.isBooked = false;
-    slot.status = 'available';
+    slot.status = "available";
     return slot.save();
   }
 }

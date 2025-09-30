@@ -35,10 +35,10 @@ class BaseRepository {
    */
   async findByIdAndUpdate(id, updateData, options = {}) {
     try {
-      return await this.model.findByIdAndUpdate(id, updateData, { 
-        new: true,  // Return the updated document
-        runValidators: true,  // Run schema validators
-        ...options 
+      return await this.model.findByIdAndUpdate(id, updateData, {
+        new: true, // Return the updated document
+        runValidators: true, // Run schema validators
+        ...options,
       });
     } catch (error) {
       throw this.handleError(error);
@@ -51,23 +51,24 @@ class BaseRepository {
   async find(criteria = {}, options = {}) {
     try {
       if (!this.model || !this.model.find) {
-        throw new Error('Model is not properly initialized');
+        throw new Error("Model is not properly initialized");
       }
 
-      const { 
-        sort = { createdAt: -1 }, 
-        limit = 50, 
+      const {
+        sort = { createdAt: -1 },
+        limit = 50,
         skip = 0,
-        populate = []
+        populate = [],
       } = options;
 
-      const query = this.model.find(criteria)
+      const query = this.model
+        .find(criteria)
         .sort(sort)
         .skip(skip)
         .limit(limit);
 
       if (populate.length > 0) {
-        populate.forEach(field => query.populate(field));
+        populate.forEach((field) => query.populate(field));
       }
 
       return await query.exec();
@@ -82,7 +83,7 @@ class BaseRepository {
   async findOne(criteria) {
     try {
       if (!this.model || !this.model.findOne) {
-        throw new Error('Model is not properly initialized');
+        throw new Error("Model is not properly initialized");
       }
 
       return await this.model.findOne(criteria);
@@ -99,12 +100,12 @@ class BaseRepository {
       const updateOptions = {
         new: true,
         runValidators: true,
-        ...options
+        ...options,
       };
       return await this.model.findByIdAndUpdate(
         id,
         { $set: data },
-        updateOptions
+        updateOptions,
       );
     } catch (error) {
       throw this.handleError(error);
@@ -126,7 +127,7 @@ class BaseRepository {
    * Handle repository errors
    */
   handleError(error) {
-    console.error('[Repository Error]:', error);
+    console.error("[Repository Error]:", error);
     return error;
   }
 
@@ -146,15 +147,15 @@ class BaseRepository {
    */
   handleError(error) {
     // Log error details here if needed
-    console.error('[Repository Error]:', error);
-    
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(err => err.message);
-      throw new Error(`Validation Error: ${messages.join(', ')}`);
+    console.error("[Repository Error]:", error);
+
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((err) => err.message);
+      throw new Error(`Validation Error: ${messages.join(", ")}`);
     }
 
     if (error.code === 11000) {
-      throw new Error('Duplicate key error');
+      throw new Error("Duplicate key error");
     }
 
     throw error;

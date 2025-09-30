@@ -6,7 +6,7 @@
 // Observer interface
 class NotificationObserver {
   update(event) {
-    throw new Error('update method must be implemented');
+    throw new Error("update method must be implemented");
   }
 }
 
@@ -16,10 +16,10 @@ class EmailNotification extends NotificationObserver {
     console.log(`Sending email notification for event: ${event.type}`);
     // Email sending implementation
     return {
-      type: 'email',
+      type: "email",
       recipient: event.recipient,
       subject: event.subject,
-      content: event.content
+      content: event.content,
     };
   }
 }
@@ -29,9 +29,9 @@ class SMSNotification extends NotificationObserver {
     console.log(`Sending SMS notification for event: ${event.type}`);
     // SMS sending implementation
     return {
-      type: 'sms',
+      type: "sms",
       recipient: event.recipient,
-      content: event.content
+      content: event.content,
     };
   }
 }
@@ -41,10 +41,10 @@ class PushNotification extends NotificationObserver {
     console.log(`Sending push notification for event: ${event.type}`);
     // Push notification implementation
     return {
-      type: 'push',
+      type: "push",
       recipient: event.recipient,
       title: event.subject,
-      body: event.content
+      body: event.content,
     };
   }
 }
@@ -89,28 +89,28 @@ class NotificationManager {
 
 // Event Types
 const NotificationEvents = {
-  BOOKING_CREATED: 'booking.created',
-  BOOKING_CONFIRMED: 'booking.confirmed',
-  BOOKING_CANCELLED: 'booking.cancelled',
-  BOOKING_REMINDER: 'booking.reminder',
-  PAYMENT_RECEIVED: 'payment.received',
-  PAYMENT_FAILED: 'payment.failed'
+  BOOKING_CREATED: "booking.created",
+  BOOKING_CONFIRMED: "booking.confirmed",
+  BOOKING_CANCELLED: "booking.cancelled",
+  BOOKING_REMINDER: "booking.reminder",
+  PAYMENT_RECEIVED: "payment.received",
+  PAYMENT_FAILED: "payment.failed",
 };
 
 // Notification Factory
 class NotificationFactory {
   static createObservers(types) {
     const observers = new Map();
-    
-    types.forEach(type => {
+
+    types.forEach((type) => {
       switch (type) {
-        case 'email':
+        case "email":
           observers.set(type, new EmailNotification());
           break;
-        case 'sms':
+        case "sms":
           observers.set(type, new SMSNotification());
           break;
-        case 'push':
+        case "push":
           observers.set(type, new PushNotification());
           break;
         default:
@@ -153,10 +153,10 @@ class NotificationEventBuilder {
 
   build() {
     if (!this.event.recipient) {
-      throw new Error('Recipient is required');
+      throw new Error("Recipient is required");
     }
     if (!this.event.content) {
-      throw new Error('Content is required');
+      throw new Error("Content is required");
     }
     return this.event;
   }
@@ -166,5 +166,5 @@ module.exports = {
   NotificationManager,
   NotificationFactory,
   NotificationEvents,
-  NotificationEventBuilder
+  NotificationEventBuilder,
 };

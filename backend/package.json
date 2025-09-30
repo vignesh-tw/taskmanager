@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "test": "cross-env NODE_ENV=test mocha \"test/**/*.test.js\" --timeout 10000 --exit",
     "test:watch": "cross-env NODE_ENV=test mocha \"test/**/*.test.js\" --timeout 10000 --watch",
-    "test:coverage": "cross-env NODE_ENV=test nyc mocha \"test/**/*.test.js\" --timeout 10000 --exit"
+    "test:coverage": "cross-env NODE_ENV=test nyc mocha \"test/**/*.test.js\" --timeout 10000 --exit",
+    "lint": "echo 'No linting configured'"
   },
   "keywords": [
     "task",

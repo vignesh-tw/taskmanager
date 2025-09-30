@@ -1,8 +1,8 @@
-const BaseRepository = require('./BaseRepository');
-const UserRepository = require('./UserRepository');
-const TherapistRepository = require('./TherapistRepository');
-const SlotRepository = require('./SlotRepository');
-const BookingRepository = require('./BookingRepository');
+const BaseRepository = require("./BaseRepository");
+const UserRepository = require("./UserRepository");
+const TherapistRepository = require("./TherapistRepository");
+const SlotRepository = require("./SlotRepository");
+const BookingRepository = require("./BookingRepository");
 
 /**
  * Repository Factory implementing the Factory Pattern
@@ -13,7 +13,7 @@ class RepositoryFactory {
     if (RepositoryFactory.instance) {
       return RepositoryFactory.instance;
     }
-    
+
     this.repositories = new Map();
     RepositoryFactory.instance = this;
   }
@@ -38,16 +38,16 @@ class RepositoryFactory {
 
     let repository;
     switch (type) {
-      case 'user':
+      case "user":
         repository = new UserRepository();
         break;
-      case 'therapist':
+      case "therapist":
         repository = new TherapistRepository();
         break;
-      case 'slot':
+      case "slot":
         repository = new SlotRepository();
         break;
-      case 'booking':
+      case "booking":
         repository = new BookingRepository();
         break;
       default:

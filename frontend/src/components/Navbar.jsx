@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -11,16 +11,16 @@ import {
   MenuItem,
   Avatar,
   Tooltip,
-  Divider
-} from '@mui/material';
+  Divider,
+} from "@mui/material";
 import {
   Psychology,
   AccountCircle,
   Dashboard,
   Schedule,
-  Logout
-} from '@mui/icons-material';
-import { useAuth } from '../context/AuthContext';
+  Logout,
+} from "@mui/icons-material";
+import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -39,7 +39,7 @@ const Navbar = () => {
   const handleLogout = () => {
     logout();
     handleClose();
-    navigate('/');
+    navigate("/");
   };
 
   const handleNavigation = (path) => {
@@ -56,32 +56,34 @@ const Navbar = () => {
           size="large"
           edge="start"
           color="inherit"
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
           sx={{ mr: 2 }}
         >
           <Psychology />
         </IconButton>
-        
-        <Typography 
-          variant="h6" 
-          component="div" 
-          sx={{ 
-            flexGrow: 1, 
-            cursor: 'pointer',
-            fontWeight: 'bold'
+
+        <Typography
+          variant="h6"
+          component="div"
+          sx={{
+            flexGrow: 1,
+            cursor: "pointer",
+            fontWeight: "bold",
           }}
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
         >
           MindCare
         </Typography>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Button
             color="inherit"
-            onClick={() => navigate('/therapists')}
+            onClick={() => navigate("/therapists")}
             sx={{
-              fontWeight: isActive('/therapists') ? 'bold' : 'normal',
-              borderBottom: isActive('/therapists') ? '2px solid white' : 'none'
+              fontWeight: isActive("/therapists") ? "bold" : "normal",
+              borderBottom: isActive("/therapists")
+                ? "2px solid white"
+                : "none",
             }}
           >
             Find Therapists
@@ -91,7 +93,7 @@ const Navbar = () => {
             <>
               <Button
                 color="inherit"
-                onClick={() => navigate('/login')}
+                onClick={() => navigate("/login")}
                 sx={{ ml: 1 }}
               >
                 Sign In
@@ -99,14 +101,14 @@ const Navbar = () => {
               <Button
                 variant="outlined"
                 color="inherit"
-                onClick={() => navigate('/signup')}
-                sx={{ 
+                onClick={() => navigate("/signup")}
+                sx={{
                   ml: 1,
-                  borderColor: 'white',
-                  '&:hover': {
-                    borderColor: 'grey.300',
-                    backgroundColor: 'rgba(255,255,255,0.1)'
-                  }
+                  borderColor: "white",
+                  "&:hover": {
+                    borderColor: "grey.300",
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                  },
                 }}
               >
                 Sign Up
@@ -114,14 +116,18 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              {user.userType === 'therapist' && (
+              {user.userType === "therapist" && (
                 <Button
                   color="inherit"
-                  onClick={() => navigate('/therapist/dashboard')}
+                  onClick={() => navigate("/therapist/dashboard")}
                   startIcon={<Dashboard />}
                   sx={{
-                    fontWeight: isActive('/therapist/dashboard') ? 'bold' : 'normal',
-                    borderBottom: isActive('/therapist/dashboard') ? '2px solid white' : 'none'
+                    fontWeight: isActive("/therapist/dashboard")
+                      ? "bold"
+                      : "normal",
+                    borderBottom: isActive("/therapist/dashboard")
+                      ? "2px solid white"
+                      : "none",
                   }}
                 >
                   Dashboard
@@ -138,8 +144,10 @@ const Navbar = () => {
                   color="inherit"
                   sx={{ ml: 1 }}
                 >
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
-                    {user?.name ? user.name.charAt(0).toUpperCase() : ''}
+                  <Avatar
+                    sx={{ width: 32, height: 32, bgcolor: "secondary.main" }}
+                  >
+                    {user?.name ? user.name.charAt(0).toUpperCase() : ""}
                   </Avatar>
                 </IconButton>
               </Tooltip>
@@ -148,13 +156,13 @@ const Navbar = () => {
                 id="menu-appbar"
                 anchorEl={anchorEl}
                 anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
+                  vertical: "bottom",
+                  horizontal: "right",
                 }}
                 keepMounted
                 transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
+                  vertical: "top",
+                  horizontal: "right",
                 }}
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
@@ -163,7 +171,7 @@ const Navbar = () => {
                   sx: {
                     mt: 1,
                     minWidth: 200,
-                    '& .MuiMenuItem-root': {
+                    "& .MuiMenuItem-root": {
                       px: 2,
                       py: 1,
                     },
@@ -174,46 +182,51 @@ const Navbar = () => {
                   <Typography variant="subtitle2" color="text.secondary">
                     Signed in as
                   </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                    {user?.name || 'User'}
+                  <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+                    {user?.name || "User"}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {user?.userType ? user.userType.charAt(0).toUpperCase() + user.userType.slice(1) : ''}
+                    {user?.userType
+                      ? user.userType.charAt(0).toUpperCase() +
+                        user.userType.slice(1)
+                      : ""}
                   </Typography>
                 </Box>
-                
+
                 <Divider />
-                
-                <MenuItem onClick={() => handleNavigation('/profile')}>
+
+                <MenuItem onClick={() => handleNavigation("/profile")}>
                   <AccountCircle sx={{ mr: 2 }} />
                   My Profile
                 </MenuItem>
-                
-                {user?.userType === 'patient' && (
+
+                {user?.userType === "patient" && (
                   <>
-                    <MenuItem onClick={() => handleNavigation('/bookings')}>
+                    <MenuItem onClick={() => handleNavigation("/bookings")}>
                       <Schedule sx={{ mr: 2 }} />
                       My Bookings
                     </MenuItem>
                   </>
                 )}
-                
-                {user?.userType === 'therapist' && (
+
+                {user?.userType === "therapist" && (
                   <>
-                    <MenuItem onClick={() => handleNavigation('/therapist/dashboard')}>
+                    <MenuItem
+                      onClick={() => handleNavigation("/therapist/dashboard")}
+                    >
                       <Dashboard sx={{ mr: 2 }} />
                       Dashboard
                     </MenuItem>
-                    <MenuItem onClick={() => handleNavigation('/slots')}>
+                    <MenuItem onClick={() => handleNavigation("/slots")}>
                       <Schedule sx={{ mr: 2 }} />
                       Manage Slots
                     </MenuItem>
                   </>
                 )}
-                
+
                 <Divider />
-                
-                <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+
+                <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
                   <Logout sx={{ mr: 2 }} />
                   Sign Out
                 </MenuItem>

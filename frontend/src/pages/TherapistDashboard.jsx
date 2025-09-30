@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Grid,
@@ -10,7 +10,6 @@ import {
   Button,
   Chip,
   Avatar,
-  Divider,
   IconButton,
   Alert,
   CircularProgress,
@@ -23,32 +22,28 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  FormHelperText
-} from '@mui/material';
+} from "@mui/material";
 import {
   Edit,
   Psychology,
   Schedule,
   Group,
   Star,
-  Add,
-  Delete,
   Verified,
   PhotoCamera,
-  Save
-} from '@mui/icons-material';
-import { useAuth } from '../context/AuthContext';
-import axiosInstance from '../axiosConfig';
+  Save,
+} from "@mui/icons-material";
+import { useAuth } from "../context/AuthContext";
 
 const TherapistDashboard = () => {
-  const { user, updateProfile } = useAuth();
+  const { user } = useAuth();
   const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [loading] = useState(false);
+  const [error, setError] = useState("");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState('');
+  const [previewUrl, setPreviewUrl] = useState("");
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -63,61 +58,77 @@ const TherapistDashboard = () => {
   };
 
   const specialtyOptions = [
-    'Anxiety', 'Depression', 'Relationship Counseling', 'Family Therapy',
-    'Cognitive Behavioral Therapy', 'Trauma Therapy', 'Addiction Counseling',
-    'Child Psychology', 'Couples Therapy', 'Grief Counseling'
+    "Anxiety",
+    "Depression",
+    "Relationship Counseling",
+    "Family Therapy",
+    "Cognitive Behavioral Therapy",
+    "Trauma Therapy",
+    "Addiction Counseling",
+    "Child Psychology",
+    "Couples Therapy",
+    "Grief Counseling",
   ];
 
   const languageOptions = [
-    'English', 'Spanish', 'French', 'German', 'Italian', 'Portuguese',
-    'Mandarin', 'Japanese', 'Korean', 'Arabic', 'Russian'
+    "English",
+    "Spanish",
+    "French",
+    "German",
+    "Italian",
+    "Portuguese",
+    "Mandarin",
+    "Japanese",
+    "Korean",
+    "Arabic",
+    "Russian",
   ];
 
   useEffect(() => {
     // Set mock profile data instead of fetching from API
     const mockProfile = {
-      id: '123456',
-      name: user?.name || 'Dr. Sarah Johnson',
-      email: user?.email || 'sarah.johnson@example.com',
-      userType: 'therapist',
+      id: "123456",
+      name: user?.name || "Dr. Sarah Johnson",
+      email: user?.email || "sarah.johnson@example.com",
+      userType: "therapist",
       profilePicture: null,
-      bio: 'I am a licensed therapist with over 8 years of experience helping individuals and families overcome challenges and improve their mental health. I specialize in cognitive behavioral therapy and have a passion for helping people develop healthy coping strategies.',
+      bio: "I am a licensed therapist with over 8 years of experience helping individuals and families overcome challenges and improve their mental health. I specialize in cognitive behavioral therapy and have a passion for helping people develop healthy coping strategies.",
       specialties: [
-        'Cognitive Behavioral Therapy',
-        'Family Therapy',
-        'Anxiety Treatment',
-        'Depression Counseling'
+        "Cognitive Behavioral Therapy",
+        "Family Therapy",
+        "Anxiety Treatment",
+        "Depression Counseling",
       ],
-      languages: ['English', 'Spanish'],
+      languages: ["English", "Spanish"],
       rate: {
         amount: 150,
-        currency: 'USD'
+        currency: "USD",
       },
       experience: 8,
       qualifications: [
         {
-          degree: 'Ph.D. in Clinical Psychology',
-          institution: 'Stanford University',
-          year: '2015'
+          degree: "Ph.D. in Clinical Psychology",
+          institution: "Stanford University",
+          year: "2015",
         },
         {
-          degree: 'M.A. in Counseling Psychology',
-          institution: 'UC Berkeley',
-          year: '2012'
-        }
+          degree: "M.A. in Counseling Psychology",
+          institution: "UC Berkeley",
+          year: "2012",
+        },
       ],
       isVerified: true,
       availability: {
-        monday: ['9:00 AM', '10:00 AM', '2:00 PM', '3:00 PM'],
-        tuesday: ['9:00 AM', '11:00 AM', '1:00 PM', '4:00 PM'],
-        wednesday: ['10:00 AM', '11:00 AM', '3:00 PM'],
-        thursday: ['9:00 AM', '2:00 PM', '3:00 PM', '4:00 PM'],
-        friday: ['9:00 AM', '10:00 AM', '11:00 AM'],
+        monday: ["9:00 AM", "10:00 AM", "2:00 PM", "3:00 PM"],
+        tuesday: ["9:00 AM", "11:00 AM", "1:00 PM", "4:00 PM"],
+        wednesday: ["10:00 AM", "11:00 AM", "3:00 PM"],
+        thursday: ["9:00 AM", "2:00 PM", "3:00 PM", "4:00 PM"],
+        friday: ["9:00 AM", "10:00 AM", "11:00 AM"],
         saturday: [],
-        sunday: []
-      }
+        sunday: [],
+      },
     };
-    
+
     setProfile(mockProfile);
     setEditForm(mockProfile);
   }, [user]);
@@ -126,7 +137,7 @@ const TherapistDashboard = () => {
     try {
       // Mock profile update - just update local state
       let profileData = { ...editForm };
-      
+
       if (selectedFile) {
         // Mock file upload - just use the preview URL
         profileData.profilePicture = previewUrl;
@@ -137,25 +148,25 @@ const TherapistDashboard = () => {
         setProfile(profileData);
         setEditDialogOpen(false);
         setSelectedFile(null);
-        setPreviewUrl('');
-        setError('');
-        alert('Profile updated successfully! (Mock update)');
+        setPreviewUrl("");
+        setError("");
+        alert("Profile updated successfully! (Mock update)");
       }, 500);
     } catch (error) {
-      setError('Failed to update profile');
+      setError("Failed to update profile");
     }
   };
 
   const handleFormChange = (field, value) => {
-    setEditForm(prev => ({
+    setEditForm((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   if (loading) {
     return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <Container sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <CircularProgress />
       </Container>
     );
@@ -173,7 +184,12 @@ const TherapistDashboard = () => {
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
+        <Typography
+          variant="h3"
+          component="h1"
+          gutterBottom
+          sx={{ fontWeight: "bold" }}
+        >
           Therapist Dashboard
         </Typography>
         <Typography variant="h6" color="text.secondary">
@@ -190,15 +206,23 @@ const TherapistDashboard = () => {
       <Grid container spacing={3}>
         {/* Profile Card */}
         <Grid item xs={12} md={4}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <Box sx={{ position: 'relative', width: 120, height: 120, mx: 'auto', mb: 2 }}>
+          <Card sx={{ height: "100%" }}>
+            <CardContent sx={{ textAlign: "center", p: 3 }}>
+              <Box
+                sx={{
+                  position: "relative",
+                  width: 120,
+                  height: 120,
+                  mx: "auto",
+                  mb: 2,
+                }}
+              >
                 <Avatar
                   src={profile.profilePicture || previewUrl}
                   sx={{
-                    width: '100%',
-                    height: '100%',
-                    fontSize: '3rem'
+                    width: "100%",
+                    height: "100%",
+                    fontSize: "3rem",
                   }}
                 >
                   {profile.name.charAt(0).toUpperCase()}
@@ -208,37 +232,49 @@ const TherapistDashboard = () => {
                   aria-label="upload picture"
                   component="label"
                   sx={{
-                    position: 'absolute',
+                    position: "absolute",
                     bottom: -8,
                     right: -8,
-                    backgroundColor: 'background.paper',
-                    '&:hover': { backgroundColor: 'background.default' }
+                    backgroundColor: "background.paper",
+                    "&:hover": { backgroundColor: "background.default" },
                   }}
                 >
-                  <input hidden accept="image/*" type="file" onChange={handleFileSelect} />
+                  <input
+                    hidden
+                    accept="image/*"
+                    type="file"
+                    onChange={handleFileSelect}
+                  />
                   <PhotoCamera />
                 </IconButton>
               </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  mb: 1,
+                }}
+              >
+                <Typography variant="h5" sx={{ fontWeight: "bold" }}>
                   {profile.name}
                 </Typography>
                 {profile.isVerified && (
-                  <Verified sx={{ ml: 1, color: 'success.main' }} />
+                  <Verified sx={{ ml: 1, color: "success.main" }} />
                 )}
               </Box>
-              
+
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 {profile.email}
               </Typography>
-              
+
               <Chip
                 label={`$${profile.rate?.amount || 0}/hour`}
                 color="primary"
                 sx={{ mb: 2 }}
               />
-              
+
               <Button
                 variant="contained"
                 startIcon={<Edit />}
@@ -257,10 +293,15 @@ const TherapistDashboard = () => {
             {/* Bio */}
             <Grid item xs={12}>
               <Paper sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                  <Typography variant="h6">
-                    Professional Bio
-                  </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "start",
+                    mb: 2,
+                  }}
+                >
+                  <Typography variant="h6">Professional Bio</Typography>
                   <Button
                     startIcon={<Edit />}
                     size="small"
@@ -270,16 +311,21 @@ const TherapistDashboard = () => {
                   </Button>
                 </Box>
                 {profile.bio ? (
-                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                  <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>
                     {profile.bio}
                   </Typography>
                 ) : (
-                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontStyle: "italic" }}
+                  >
                     No bio added yet. Click Edit to add your professional bio.
                   </Typography>
                 )}
                 <Typography variant="body1" sx={{ mb: 2 }}>
-                  {profile.bio || 'No bio added yet. Click Edit Profile to add your professional background.'}
+                  {profile.bio ||
+                    "No bio added yet. Click Edit Profile to add your professional background."}
                 </Typography>
               </Paper>
             </Grid>
@@ -290,7 +336,7 @@ const TherapistDashboard = () => {
                 <Typography variant="h6" gutterBottom>
                   Specialties
                 </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                   {profile.specialties && profile.specialties.length > 0 ? (
                     profile.specialties.map((specialty, index) => (
                       <Chip
@@ -315,7 +361,7 @@ const TherapistDashboard = () => {
                 <Typography variant="h6" gutterBottom>
                   Languages
                 </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                   {profile.languages && profile.languages.length > 0 ? (
                     profile.languages.map((language, index) => (
                       <Chip
@@ -353,7 +399,8 @@ const TherapistDashboard = () => {
                     <Typography variant="subtitle2" color="text.secondary">
                       Qualifications
                     </Typography>
-                    {profile.qualifications && profile.qualifications.length > 0 ? (
+                    {profile.qualifications &&
+                    profile.qualifications.length > 0 ? (
                       profile.qualifications.map((qual, index) => (
                         <Typography key={index} variant="body2">
                           • {qual.degree} - {qual.institution} ({qual.year})
@@ -375,8 +422,10 @@ const TherapistDashboard = () => {
         <Grid item xs={12}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ textAlign: 'center', p: 2 }}>
-                <Psychology sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+              <Card sx={{ textAlign: "center", p: 2 }}>
+                <Psychology
+                  sx={{ fontSize: 40, color: "primary.main", mb: 1 }}
+                />
                 <Typography variant="h6">Profile Views</Typography>
                 <Typography variant="h4" color="primary">
                   {Math.floor(Math.random() * 100) + 50}
@@ -384,8 +433,10 @@ const TherapistDashboard = () => {
               </Card>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ textAlign: 'center', p: 2 }}>
-                <Schedule sx={{ fontSize: 40, color: 'secondary.main', mb: 1 }} />
+              <Card sx={{ textAlign: "center", p: 2 }}>
+                <Schedule
+                  sx={{ fontSize: 40, color: "secondary.main", mb: 1 }}
+                />
                 <Typography variant="h6">Appointments</Typography>
                 <Typography variant="h4" color="secondary">
                   {Math.floor(Math.random() * 20) + 5}
@@ -393,8 +444,8 @@ const TherapistDashboard = () => {
               </Card>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ textAlign: 'center', p: 2 }}>
-                <Group sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
+              <Card sx={{ textAlign: "center", p: 2 }}>
+                <Group sx={{ fontSize: 40, color: "success.main", mb: 1 }} />
                 <Typography variant="h6">Total Patients</Typography>
                 <Typography variant="h4" color="success.main">
                   {Math.floor(Math.random() * 50) + 10}
@@ -402,8 +453,8 @@ const TherapistDashboard = () => {
               </Card>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ textAlign: 'center', p: 2 }}>
-                <Star sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
+              <Card sx={{ textAlign: "center", p: 2 }}>
+                <Star sx={{ fontSize: 40, color: "warning.main", mb: 1 }} />
                 <Typography variant="h6">Rating</Typography>
                 <Typography variant="h4" color="warning.main">
                   {(Math.random() * 1.5 + 3.5).toFixed(1)}
@@ -429,16 +480,16 @@ const TherapistDashboard = () => {
                 <TextField
                   fullWidth
                   label="Name"
-                  value={editForm.name || ''}
-                  onChange={(e) => handleFormChange('name', e.target.value)}
+                  value={editForm.name || ""}
+                  onChange={(e) => handleFormChange("name", e.target.value)}
                   margin="normal"
                 />
 
                 <TextField
                   fullWidth
                   label="Email"
-                  value={editForm.email || ''}
-                  onChange={(e) => handleFormChange('email', e.target.value)}
+                  value={editForm.email || ""}
+                  onChange={(e) => handleFormChange("email", e.target.value)}
                   margin="normal"
                   type="email"
                 />
@@ -448,9 +499,11 @@ const TherapistDashboard = () => {
                   <Select
                     multiple
                     value={editForm.specialties || []}
-                    onChange={(e) => handleFormChange('specialties', e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("specialties", e.target.value)
+                    }
                     renderValue={(selected) => (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                         {selected.map((value) => (
                           <Chip key={value} label={value} />
                         ))}
@@ -470,9 +523,11 @@ const TherapistDashboard = () => {
                   <Select
                     multiple
                     value={editForm.languages || []}
-                    onChange={(e) => handleFormChange('languages', e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("languages", e.target.value)
+                    }
                     renderValue={(selected) => (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                         {selected.map((value) => (
                           <Chip key={value} label={value} />
                         ))}
@@ -490,22 +545,34 @@ const TherapistDashboard = () => {
                 <TextField
                   fullWidth
                   label="Hourly Rate (USD)"
-                  value={editForm.rate?.amount || ''}
-                  onChange={(e) => handleFormChange('rate', { ...editForm.rate, amount: Number(e.target.value) })}
+                  value={editForm.rate?.amount || ""}
+                  onChange={(e) =>
+                    handleFormChange("rate", {
+                      ...editForm.rate,
+                      amount: Number(e.target.value),
+                    })
+                  }
                   margin="normal"
                   type="number"
                 />
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <Box sx={{ textAlign: 'center', mb: 2 }}>
-                  <Box sx={{ position: 'relative', width: 150, height: 150, mx: 'auto' }}>
+                <Box sx={{ textAlign: "center", mb: 2 }}>
+                  <Box
+                    sx={{
+                      position: "relative",
+                      width: 150,
+                      height: 150,
+                      mx: "auto",
+                    }}
+                  >
                     <Avatar
                       src={previewUrl || editForm.profilePicture}
                       sx={{
-                        width: '100%',
-                        height: '100%',
-                        fontSize: '4rem'
+                        width: "100%",
+                        height: "100%",
+                        fontSize: "4rem",
                       }}
                     >
                       {editForm.name?.charAt(0).toUpperCase()}
@@ -515,14 +582,19 @@ const TherapistDashboard = () => {
                       aria-label="upload picture"
                       component="label"
                       sx={{
-                        position: 'absolute',
+                        position: "absolute",
                         bottom: -8,
                         right: -8,
-                        backgroundColor: 'background.paper',
-                        '&:hover': { backgroundColor: 'background.default' }
+                        backgroundColor: "background.paper",
+                        "&:hover": { backgroundColor: "background.default" },
                       }}
                     >
-                      <input hidden accept="image/*" type="file" onChange={handleFileSelect} />
+                      <input
+                        hidden
+                        accept="image/*"
+                        type="file"
+                        onChange={handleFileSelect}
+                      />
                       <PhotoCamera />
                     </IconButton>
                   </Box>
@@ -531,8 +603,8 @@ const TherapistDashboard = () => {
                 <TextField
                   fullWidth
                   label="Professional Bio"
-                  value={editForm.bio || ''}
-                  onChange={(e) => handleFormChange('bio', e.target.value)}
+                  value={editForm.bio || ""}
+                  onChange={(e) => handleFormChange("bio", e.target.value)}
                   margin="normal"
                   multiline
                   rows={4}
@@ -542,8 +614,10 @@ const TherapistDashboard = () => {
                 <TextField
                   fullWidth
                   label="Years of Experience"
-                  value={editForm.experience || ''}
-                  onChange={(e) => handleFormChange('experience', Number(e.target.value))}
+                  value={editForm.experience || ""}
+                  onChange={(e) =>
+                    handleFormChange("experience", Number(e.target.value))
+                  }
                   margin="normal"
                   type="number"
                 />
@@ -552,10 +626,12 @@ const TherapistDashboard = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleEditProfile} variant="contained" startIcon={<Save />}>
+          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleEditProfile}
+            variant="contained"
+            startIcon={<Save />}
+          >
             Save Changes
           </Button>
         </DialogActions>

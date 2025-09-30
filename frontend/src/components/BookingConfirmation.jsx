@@ -1,24 +1,24 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState } from "react";
+import axios from "axios";
 
-const BookingConfirmation = ({ 
-  isOpen, 
-  onClose, 
-  therapist, 
-  selectedSlot, 
-  onBookingSuccess 
+const BookingConfirmation = ({
+  isOpen,
+  onClose,
+  therapist,
+  selectedSlot,
+  onBookingSuccess,
 }) => {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: Details, 2: Payment, 3: Confirmation
-  const [paymentMethod, setPaymentMethod] = useState('credit_card');
-  const [bookingNotes, setBookingNotes] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState("credit_card");
+  const [bookingNotes, setBookingNotes] = useState("");
   const [bookingResult, setBookingResult] = useState(null);
   const [error, setError] = useState(null);
 
   const paymentMethods = [
-    { id: 'credit_card', name: 'Credit Card', icon: '💳' },
-    { id: 'paypal', name: 'PayPal', icon: '🅿️' },
-    { id: 'insurance', name: 'Insurance', icon: '🏥' }
+    { id: "credit_card", name: "Credit Card", icon: "💳" },
+    { id: "paypal", name: "PayPal", icon: "🅿️" },
+    { id: "insurance", name: "Insurance", icon: "🏥" },
   ];
 
   const handleConfirmBooking = async () => {
@@ -26,28 +26,27 @@ const BookingConfirmation = ({
     setError(null);
 
     try {
-      const response = await axios.post('/api/bookings', {
+      const response = await axios.post("/api/bookings", {
         slotId: selectedSlot.id,
         therapistId: therapist.id,
         paymentMethod,
-        notes: bookingNotes
+        notes: bookingNotes,
       });
 
       setBookingResult(response.data.data);
       setStep(3);
-      
+
       // Call success callback after a short delay
       setTimeout(() => {
         if (onBookingSuccess) {
           onBookingSuccess(response.data.data);
         }
       }, 2000);
-
     } catch (err) {
-      console.error('Booking error:', err);
+      console.error("Booking error:", err);
       setError(
-        err.response?.data?.message || 
-        'Failed to create booking. Please try again.'
+        err.response?.data?.message ||
+          "Failed to create booking. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -57,17 +56,17 @@ const BookingConfirmation = ({
   const formatDateTime = (dateTimeString) => {
     const date = new Date(dateTimeString);
     return {
-      date: date.toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+      date: date.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       }),
-      time: date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      })
+      time: date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }),
     };
   };
 
@@ -80,8 +79,8 @@ const BookingConfirmation = ({
 
   const resetModal = () => {
     setStep(1);
-    setPaymentMethod('credit_card');
-    setBookingNotes('');
+    setPaymentMethod("credit_card");
+    setBookingNotes("");
     setBookingResult(null);
     setError(null);
     setLoading(false);
@@ -94,7 +93,9 @@ const BookingConfirmation = ({
 
   if (!isOpen) return null;
 
-  const { date, time } = selectedSlot ? formatDateTime(selectedSlot.startTime) : { date: '', time: '' };
+  const { date, time } = selectedSlot
+    ? formatDateTime(selectedSlot.startTime)
+    : { date: "", time: "" };
   const duration = calculateDuration();
 
   return (
@@ -103,16 +104,26 @@ const BookingConfirmation = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
-            {step === 1 && 'Booking Details'}
-            {step === 2 && 'Payment Information'}
-            {step === 3 && 'Booking Confirmed!'}
+            {step === 1 && "Booking Details"}
+            {step === 2 && "Payment Information"}
+            {step === 3 && "Booking Confirmed!"}
           </h2>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -123,7 +134,9 @@ const BookingConfirmation = ({
             <div className="space-y-4">
               {/* Session Details */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Session Details</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  Session Details
+                </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Therapist:</span>
@@ -143,7 +156,9 @@ const BookingConfirmation = ({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Session Fee:</span>
-                    <span className="font-medium">${selectedSlot?.price || therapist?.sessionPrice || 100}</span>
+                    <span className="font-medium">
+                      ${selectedSlot?.price || therapist?.sessionPrice || 100}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -191,7 +206,9 @@ const BookingConfirmation = ({
             <div className="space-y-4">
               {/* Payment Method Selection */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Payment Method</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  Payment Method
+                </h3>
                 <div className="space-y-2">
                   {paymentMethods.map((method) => (
                     <label
@@ -215,11 +232,15 @@ const BookingConfirmation = ({
 
               {/* Payment Summary */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">Payment Summary</h4>
+                <h4 className="font-semibold text-gray-900 mb-2">
+                  Payment Summary
+                </h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span>Session Fee:</span>
-                    <span>${selectedSlot?.price || therapist?.sessionPrice || 100}</span>
+                    <span>
+                      ${selectedSlot?.price || therapist?.sessionPrice || 100}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Platform Fee:</span>
@@ -228,7 +249,12 @@ const BookingConfirmation = ({
                   <div className="border-t pt-1 mt-2">
                     <div className="flex justify-between font-semibold">
                       <span>Total:</span>
-                      <span>${(selectedSlot?.price || therapist?.sessionPrice || 100) + 5}</span>
+                      <span>
+                        $
+                        {(selectedSlot?.price ||
+                          therapist?.sessionPrice ||
+                          100) + 5}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -258,7 +284,7 @@ const BookingConfirmation = ({
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
-                    'Confirm & Pay'
+                    "Confirm & Pay"
                   )}
                 </button>
               </div>
@@ -269,8 +295,18 @@ const BookingConfirmation = ({
             <div className="text-center space-y-4">
               {/* Success Icon */}
               <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg
+                  className="w-8 h-8 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </div>
 
@@ -280,18 +316,28 @@ const BookingConfirmation = ({
                   Booking Confirmed!
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Your therapy session has been successfully booked. You will receive a confirmation email shortly.
+                  Your therapy session has been successfully booked. You will
+                  receive a confirmation email shortly.
                 </p>
               </div>
 
               {/* Booking Details */}
               {bookingResult && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-left">
-                  <h4 className="font-semibold text-green-900 mb-2">Booking Reference</h4>
+                  <h4 className="font-semibold text-green-900 mb-2">
+                    Booking Reference
+                  </h4>
                   <div className="space-y-1 text-sm text-green-800">
-                    <div>Booking ID: <span className="font-mono">{bookingResult.id || 'BK-' + Date.now()}</span></div>
+                    <div>
+                      Booking ID:{" "}
+                      <span className="font-mono">
+                        {bookingResult.id || "BK-" + Date.now()}
+                      </span>
+                    </div>
                     <div>Therapist: {therapist?.name}</div>
-                    <div>Date & Time: {date} at {time}</div>
+                    <div>
+                      Date & Time: {date} at {time}
+                    </div>
                   </div>
                 </div>
               )}
@@ -305,7 +351,9 @@ const BookingConfirmation = ({
                   Done
                 </button>
                 <button
-                  onClick={() => {/* Navigate to bookings page */}}
+                  onClick={() => {
+                    /* Navigate to bookings page */
+                  }}
                   className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
                 >
                   View My Bookings
