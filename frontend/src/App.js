@@ -12,6 +12,7 @@ import TherapistDashboard from './pages/TherapistDashboard';
 import Therapist from './pages/Therapist';
 import Slot from './pages/Slot';
 import Booking from './pages/Booking';
+import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -38,6 +39,14 @@ function App() {
                 <Route path="/therapists" element={<Therapist />} />
                 <Route path="/slots" element={<Slot />} />
                 <Route path="/bookings" element={<Booking />} />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } 
+                />
               </Routes>
             </Container>
           </div>
