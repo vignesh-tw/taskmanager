@@ -1,0 +1,189 @@
+const express = require('express');
+const { AuthenticationDecorator, RoleAuthorizationDecorator, ResourceOwnerDecorator } = require('../patterns/AuthDecorator');
+const { BookingCommandInvoker, CreateBookingCommand, CancelBookingCommand } = require('../patterns/BookingCommand');
+const { PaymentProcessor, PaymentStrategyFactory } = require('../patterns/PaymentStrategy');
+const { NotificationManager, NotificationFactory, NotificationEvents, NotificationEventBuilder } = require('../patterns/NotificationObserver');
+const repositoryFactory = require('../repositories/RepositoryFactory');
+const router = express.Router();
+
+// Initialize repositories
+const bookingRepository = repositoryFactory.getRepository('booking');
+const slotRepository = repositoryFactory.getRepository('slot');
+const therapistRepository = repositoryFactory.getRepository('therapist');
+
+// Initialize command invoker
+const bookingCommandInvoker = new BookingCommandInvoker();
+
+// Initialize payment processor
+const paymentProcessor = new PaymentProcessor();
+
+// Initialize notification system
+const notificationManager = new NotificationManager();
+const notificationObservers = NotificationFactory.createObservers(['email', 'sms']);
+notificationManager.attach(NotificationEvents.BOOKING_CREATED, notificationObservers.get('email'));
+notificationManager.attach(NotificationEvents.BOOKING_CANCELLED, notificationObservers.get('email'));
+
+// Base controller for creating booking
+class CreateBookingController {
+    async execute(req, res) {
+        try {
+            const { slotId, paymentMethod } = req.body;
+
+            // Verify slot
+            const slot = await slotRepository.findById(slotId);
+            if (!slot || slot.isBooked) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'Slot is not available'
+                });
+            }
+
+            // Get therapist details for payment
+            const therapist = await therapistRepository.findById(slot.therapist);
+            if (!therapist) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'Therapist not found'
+                });
+            }
+
+            // Process payment
+            const paymentStrategy = PaymentStrategyFactory.createStrategy(paymentMethod, {});
+            paymentProcessor.setStrategy(paymentStrategy);
+            
+            const paymentResult = await paymentProcessor.processPayment(
+                therapist.rate.amount,
+                therapist.rate.currency
+            );
+
+            // Create booking using Command pattern
+            const bookingData = {
+                patient: req.user.id,
+                therapist: therapist._id,
+                slot: slotId,
+                paymentStatus: 'paid',
+                paymentAmount: {
+                    amount: therapist.rate.amount,
+                    currency: therapist.rate.currency
+                }
+            };
+
+            const createCommand = new CreateBookingCommand(bookingRepository, slotRepository, bookingData);
+            const booking = await bookingCommandInvoker.executeCommand(createCommand);
+
+            // Send notifications
+            const notificationEvent = new NotificationEventBuilder(NotificationEvents.BOOKING_CREATED)
+                .setRecipient(req.user.email)
+                .setSubject('Booking Confirmation')
+                .setContent(`Your booking with ${therapist.name} has been confirmed`)
+                .setData(booking)
+                .build();
+
+            await notificationManager.notify(notificationEvent);
+
+            return res.status(201).json({
+                status: 'success',
+                data: booking
+            });
+        } catch (error) {
+            console.error('[Create Booking Error]:', error);
+            return res.status(500).json({
+                status: 'error',
+                message: 'Error creating booking'
+            });
+        }
+    }
+}
+
+// Base controller for listing user's bookings
+class ListBookingsController {
+    async execute(req, res) {
+        try {
+            const { status, startDate, endDate } = req.query;
+            const userType = req.user.userType;
+            
+            const bookings = await bookingRepository.findByDateRange(
+                req.user.id,
+                userType,
+                startDate ? new Date(startDate) : null,
+                endDate ? new Date(endDate) : null
+            );
+
+            return res.status(200).json({
+                status: 'success',
+                data: bookings
+            });
+        } catch (error) {
+            console.error('[List Bookings Error]:', error);
+            return res.status(500).json({
+                status: 'error',
+                message: 'Error fetching bookings'
+            });
+        }
+    }
+}
+
+// Base controller for cancelling booking
+class CancelBookingController {
+    async execute(req, res) {
+        try {
+            const { reason } = req.body;
+            const booking = await bookingRepository.findById(req.params.id);
+            
+            if (!booking) {
+                return res.status(404).json({
+                    status: 'error',
+                    message: 'Booking not found'
+                });
+            }
+
+            // Use Command pattern for cancellation
+            const cancelCommand = new CancelBookingCommand(
+                bookingRepository,
+                slotRepository,
+                req.params.id,
+                reason
+            );
+            
+            await bookingCommandInvoker.executeCommand(cancelCommand);
+
+            // Send cancellation notification
+            const notificationEvent = new NotificationEventBuilder(NotificationEvents.BOOKING_CANCELLED)
+                .setRecipient(req.user.email)
+                .setSubject('Booking Cancelled')
+                .setContent(`Your booking has been cancelled`)
+                .setData({ bookingId: req.params.id, reason })
+                .build();
+
+            await notificationManager.notify(notificationEvent);
+
+            return res.status(200).json({
+                status: 'success',
+                message: 'Booking cancelled successfully'
+            });
+        } catch (error) {
+            console.error('[Cancel Booking Error]:', error);
+            return res.status(500).json({
+                status: 'error',
+                message: 'Error cancelling booking'
+            });
+        }
+    }
+}
+
+// Create decorated controllers
+const createBooking = new AuthenticationDecorator(new CreateBookingController());
+const listBookings = new AuthenticationDecorator(new ListBookingsController());
+const cancelBooking = new AuthenticationDecorator(
+    new ResourceOwnerDecorator(
+        new CancelBookingController(),
+        'params.id'
+    )
+);
+
+// Routes
+router.post('/', (req, res, next) => createBooking.execute(req, res, next));
+router.get('/my', (req, res, next) => listBookings.execute(req, res, next));
+router.delete('/:id', (req, res, next) => cancelBooking.execute(req, res, next));
+
+module.exports = router;
