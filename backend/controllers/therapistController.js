@@ -2,6 +2,45 @@ const { Therapist, User } = require('../models/User');
 const { validationResult, body } = require('express-validator');
 
 /**
+ * Search therapists by query
+ */
+const searchTherapists = async (req, res) => {
+    try {
+        const { query } = req.query;
+        if (!query) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Search query is required'
+            });
+        }
+
+        const searchFilter = {
+            userType: 'therapist',
+            $or: [
+                { name: { $regex: query, $options: 'i' } },
+                { specialties: { $regex: query, $options: 'i' } },
+                { languages: { $regex: query, $options: 'i' } },
+                { 'location.city': { $regex: query, $options: 'i' } },
+                { 'location.state': { $regex: query, $options: 'i' } }
+            ]
+        };
+
+        const therapists = await Therapist.find(searchFilter).select('-password');
+        
+        res.status(200).json({
+            status: 'success',
+            data: therapists.map(t => t.getProfileData())
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: 'Error searching therapists',
+            error: error.message
+        });
+    }
+};
+
+/**
  * Validation rules for therapist profile updates
  */
 const therapistValidation = [
@@ -23,23 +62,20 @@ const getAllTherapists = async (req, res) => {
         
         // Build filter object
         const filter = { userType: 'therapist' };
-        if (specialty) filter.specialties = { $in: [new RegExp(specialty, 'i')] };
-        if (minRate) filter.rate = { ...filter.rate, $gte: parseFloat(minRate) };
-        if (maxRate) filter.rate = { ...filter.rate, $lte: parseFloat(maxRate) };
+        if (specialty) filter.specialties = specialty;
+        if (minRate) filter['rate.amount'] = { ...filter['rate.amount'], $gte: parseFloat(minRate) };
+        if (maxRate) filter['rate.amount'] = { ...filter['rate.amount'], $lte: parseFloat(maxRate) };
         if (isVerified !== undefined) filter.isVerified = isVerified === 'true';
-
-        const skip = (page - 1) * limit;
         
         const therapists = await Therapist.find(filter)
             .select('-password')
-            .skip(skip)
-            .limit(parseInt(limit))
             .sort({ isVerified: -1, createdAt: -1 });
             
         const total = await Therapist.countDocuments(filter);
         
         res.status(200).json({
-            therapists: therapists.map(t => t.getProfileData()),
+            status: 'success',
+            data: therapists.map(t => t.getProfileData()),
             pagination: {
                 currentPage: parseInt(page),
                 totalPages: Math.ceil(total / limit),
@@ -49,7 +85,11 @@ const getAllTherapists = async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching therapists', error: error.message });
+        res.status(500).json({
+            status: 'error',
+            message: 'Error fetching therapists',
+            error: error.message
+        });
     }
 };
 
@@ -60,9 +100,15 @@ const getTherapistById = async (req, res) => {
     try {
         const therapist = await Therapist.findById(req.params.id).select('-password');
         if (!therapist || therapist.userType !== 'therapist') {
-            return res.status(404).json({ message: 'Therapist not found' });
+            return res.status(404).json({ 
+                status: 'error',
+                message: 'Therapist not found' 
+            });
         }
-        res.status(200).json(therapist.getProfileData());
+        res.status(200).json({ 
+            status: 'success',
+            data: therapist.getProfileData() 
+        });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching therapist', error: error.message });
     }
@@ -75,9 +121,15 @@ const getMyProfile = async (req, res) => {
     try {
         const therapist = await Therapist.findById(req.user.id).select('-password');
         if (!therapist || therapist.userType !== 'therapist') {
-            return res.status(404).json({ message: 'Therapist profile not found' });
+            return res.status(404).json({ 
+                status: 'error',
+                message: 'Therapist profile not found' 
+            });
         }
-        res.status(200).json(therapist.getProfileData());
+        res.status(200).json({ 
+            status: 'success',
+            data: therapist.getProfileData() 
+        });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching profile', error: error.message });
     }
@@ -92,6 +144,7 @@ const updateMyProfile = async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({
+                status: 'error',
                 message: 'Validation failed',
                 errors: errors.array()
             });
@@ -99,7 +152,10 @@ const updateMyProfile = async (req, res) => {
 
         const therapist = await Therapist.findById(req.user.id);
         if (!therapist || therapist.userType !== 'therapist') {
-            return res.status(404).json({ message: 'Therapist not found' });
+            return res.status(404).json({ 
+                status: 'error',
+                message: 'Therapist not found' 
+            });
         }
 
         // Update allowed fields
@@ -117,8 +173,9 @@ const updateMyProfile = async (req, res) => {
         await therapist.save();
 
         res.status(200).json({
+            status: 'success',
             message: 'Profile updated successfully',
-            profile: therapist.getProfileData()
+            data: therapist.getProfileData()
         });
     } catch (error) {
         res.status(400).json({ message: 'Error updating profile', error: error.message });
@@ -132,24 +189,61 @@ const updateAvailability = async (req, res) => {
     try {
         const { availability } = req.body;
         
+        // Validate availability object structure
         if (!availability || typeof availability !== 'object') {
-            return res.status(400).json({ message: 'Valid availability object is required' });
+            return res.status(400).json({ 
+                status: 'error',
+                message: 'Valid availability object is required' 
+            });
+        }
+
+        // Validate availability days
+        const validDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        const hasValidDays = Object.keys(availability).every(day => validDays.includes(day));
+        if (!hasValidDays) {
+            return res.status(400).json({ 
+                status: 'error',
+                message: 'Availability must include valid days of the week' 
+            });
+        }
+
+        // Validate time slots format
+        const isValidTimeFormat = (time) => /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time);
+        const hasValidTimeSlots = Object.values(availability).every(slots =>
+            Array.isArray(slots) && slots.every(slot =>
+                slot && isValidTimeFormat(slot.start) && isValidTimeFormat(slot.end)
+            )
+        );
+        if (!hasValidTimeSlots) {
+            return res.status(400).json({ 
+                status: 'error',
+                message: 'Time slots must be in valid HH:MM format' 
+            });
         }
 
         const therapist = await Therapist.findById(req.user.id);
         if (!therapist || therapist.userType !== 'therapist') {
-            return res.status(404).json({ message: 'Therapist not found' });
+            return res.status(404).json({ 
+                status: 'error',
+                message: 'Therapist not found' 
+            });
         }
 
         therapist.availability = availability;
         await therapist.save();
 
         res.status(200).json({
-            message: 'Availability updated successfully',
-            availability: therapist.availability
+            status: 'success',
+            data: {
+                availability: therapist.availability
+            }
         });
     } catch (error) {
-        res.status(400).json({ message: 'Error updating availability', error: error.message });
+        res.status(500).json({ 
+            status: 'error',
+            message: 'Error updating availability',
+            error: error.message 
+        });
     }
 };
 
@@ -158,43 +252,50 @@ const updateAvailability = async (req, res) => {
  */
 const searchTherapists = async (req, res) => {
     try {
-        const { query, page = 1, limit = 10 } = req.query;
-        
+        const { query = '' } = req.query;
         if (!query) {
-            return res.status(400).json({ message: 'Search query is required' });
+            return res.status(400).json({
+                status: 'error',
+                message: 'Search query is required'
+            });
         }
 
         const searchRegex = new RegExp(query, 'i');
         const filter = {
             userType: 'therapist',
             $or: [
-                { name: searchRegex },
-                { specialties: { $in: [searchRegex] } },
-                { bio: searchRegex }
+                { name: { $regex: query, $options: 'i' } },
+                { specialties: { $regex: query, $options: 'i' } },
+                { languages: { $regex: query, $options: 'i' } },
+                { 'location.city': { $regex: query, $options: 'i' } },
+                { 'location.state': { $regex: query, $options: 'i' } }
             ]
         };
 
-        const skip = (page - 1) * limit;
-        
         const therapists = await Therapist.find(filter)
             .select('-password')
-            .skip(skip)
-            .limit(parseInt(limit))
             .sort({ isVerified: -1, createdAt: -1 });
-            
-        const total = await Therapist.countDocuments(filter);
-        
+
+        const mappedData = therapists.map(t => ({
+            _id: t._id,
+            name: t.name,
+            specialties: t.specialties || [],
+            languages: t.languages || [],
+            location: t.location || {},
+            rate: t.rate || { amount: 0, currency: 'USD' },
+            isVerified: t.isVerified || false
+        }));
+
         res.status(200).json({
-            therapists: therapists.map(t => t.getProfileData()),
-            query,
-            pagination: {
-                currentPage: parseInt(page),
-                totalPages: Math.ceil(total / limit),
-                totalResults: total
-            }
+            status: 'success',
+            data: mappedData
         });
     } catch (error) {
-        res.status(500).json({ message: 'Error searching therapists', error: error.message });
+        res.status(500).json({ 
+            status: 'error',
+            message: 'Error searching therapists', 
+            error: error.message 
+        });
     }
 };
 

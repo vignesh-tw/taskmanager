@@ -1,129 +1,182 @@
 
-const { User, Patient, Therapist } = require('../models/User');
 const jwt = require('jsonwebtoken');
-const bcryptjs = require('bcryptjs');
+const repositoryFactory = require('../repositories/RepositoryFactory');
+const { NotificationManager, NotificationFactory, NotificationEvents, NotificationEventBuilder } = require('../patterns/NotificationObserver');
+const { AuthenticationDecorator, RoleAuthorizationDecorator } = require('../patterns/AuthDecorator');
 
-const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+// Initialize repositories
+const userRepository = repositoryFactory.getRepository('user');
+
+// Initialize notification system
+const notificationManager = new NotificationManager();
+const notificationObservers = NotificationFactory.createObservers(['email']);
+notificationManager.attach(NotificationEvents.USER_REGISTERED, notificationObservers.get('email'));
+
+// Token generation utility
+const generateToken = (user) => {
+    return jwt.sign(
+        { 
+            id: user._id,
+            email: user.email,
+            userType: user.userType
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '30d' }
+    );
 };
 
-const registerUser = async (req, res) => {
-    const { name, email, password, userType, ...additionalData } = req.body;
-    const startedAt = Date.now();
-    try {
-        console.log('[REGISTER] incoming', { name, email, userType, additionalKeys: Object.keys(additionalData) });
-        if (!name || !email || !password || !userType) {
-            return res.status(400).json({ message: 'Missing required fields', received: { name: !!name, email: !!email, password: !!password, userType } });
-        }
+// Base controller for registration
+class RegistrationController {
+    async execute(req, res) {
+        const { name, email, password, userType, ...additionalData } = req.body;
 
-        const userExists = await User.findOne({ email });
-        if (userExists) {
-            console.log('[REGISTER] duplicate email', email);
-            return res.status(400).json({ message: 'User already exists' });
-        }
-
-        if (!['patient', 'therapist'].includes(userType)) {
-            console.log('[REGISTER] invalid userType', userType);
-            return res.status(400).json({ message: 'Invalid user type. Must be either "patient" or "therapist"' });
-        }
-
-        let user;
-        const userData = { name, email, password, userType, ...additionalData };
-        console.log('[REGISTER] userData prepared', Object.keys(userData));
-
-        if (userType === 'therapist') {
-            if (userData.rate === undefined || userData.rate === null) {
-                return res.status(400).json({ message: 'Therapist must have a valid rate (missing)' });
+        try {
+            // Validate required fields
+            if (!name || !email || !password || !userType) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'Missing required fields',
+                    received: { name: !!name, email: !!email, password: !!password, userType }
+                });
             }
-            if (Number.isNaN(Number(userData.rate)) || Number(userData.rate) < 0) {
-                return res.status(400).json({ message: 'Therapist must have a valid rate (NaN or negative)' });
+
+            // Validate user type
+            if (!['patient', 'therapist'].includes(userType)) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'Invalid user type. Must be either "patient" or "therapist"'
+                });
             }
-            userData.rate = Number(userData.rate);
-            user = new Therapist(userData);
-        } else {
-            user = new Patient(userData);
-        }
 
-        await user.save();
-        console.log('[REGISTER] saved user', { id: user._id.toString(), type: user.userType, ms: Date.now() - startedAt });
-        const profileData = user.getProfileData();
-        res.status(201).json({ ...profileData, token: generateToken(user.id) });
-    } catch (error) {
-        console.error('[REGISTER] error', error);
-        res.status(500).json({ message: error.message });
-    }
-};
+            // Check existing user
+            const existingUser = await userRepository.findByEmail(email);
+            if (existingUser) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'User already exists'
+                });
+            }
 
-const loginUser = async (req, res) => {
-    const { email, password } = req.body;
-    try {
-        const user = await User.findOne({ email });
-        if (user && (await user.comparePassword(password))) {
-            // Use polymorphic method to get appropriate profile data
-            const profileData = user.getProfileData();
-            res.json({ 
-                ...profileData, 
-                token: generateToken(user.id) 
+            // Create user using repository pattern
+            const userData = { name, email, password, userType, ...additionalData };
+            const user = await userRepository.createUser(userData);
+
+            // Send welcome notification using observer pattern
+            const notificationEvent = new NotificationEventBuilder(NotificationEvents.USER_REGISTERED)
+                .setRecipient(user.email)
+                .setSubject('Welcome to our platform!')
+                .setContent(`Welcome ${user.name}! Thank you for registering.`)
+                .setData({ userType: user.userType })
+                .build();
+
+            await notificationManager.notify(notificationEvent);
+
+            // Return success response
+            return res.status(201).json({
+                status: 'success',
+                data: {
+                    user: user.getProfileData(),
+                    token: generateToken(user)
+                }
             });
-        } else {
-            res.status(401).json({ message: 'Invalid email or password' });
+        } catch (error) {
+            console.error('[Registration Error]:', error);
+            return res.status(500).json({
+                status: 'error',
+                message: 'Registration failed',
+                error: error.message
+            });
         }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
     }
-};
+}
 
-const getProfile = async (req, res) => {
-    try {
-      const user = await User.findById(req.user.id);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-  
-      // Use polymorphic method to get appropriate profile data
-      const profileData = user.getProfileData();
-      res.status(200).json(profileData);
-    } catch (error) {
-      res.status(500).json({ message: 'Server error', error: error.message });
-    }
-  };
+// Base controller for login
+class LoginController {
+    async execute(req, res) {
+        const { email, password } = req.body;
 
-const updateUserProfile = async (req, res) => {
-    try {
-        const user = await User.findById(req.user.id);
-        if (!user) return res.status(404).json({ message: 'User not found' });
+        try {
+            // Validate required fields
+            if (!email || !password) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'Please provide email and password'
+                });
+            }
 
-        // Update common fields
-        if (req.body.name) user.name = req.body.name;
-        if (req.body.email) user.email = req.body.email;
+            // Find user
+            const user = await userRepository.findByEmail(email);
+            if (!user) {
+                return res.status(401).json({
+                    status: 'error',
+                    message: 'Invalid credentials'
+                });
+            }
 
-        // Update user-type specific fields using polymorphism
-        if (user.userType === 'patient') {
-            if (req.body.university !== undefined) user.university = req.body.university;
-            if (req.body.address !== undefined) user.address = req.body.address;
-            if (req.body.dateOfBirth !== undefined) user.dateOfBirth = req.body.dateOfBirth;
-            if (req.body.emergencyContact !== undefined) user.emergencyContact = req.body.emergencyContact;
-        } else if (user.userType === 'therapist') {
-            if (req.body.specialties !== undefined) user.specialties = req.body.specialties;
-            if (req.body.languages !== undefined) user.languages = req.body.languages;
-            if (req.body.rate !== undefined) user.rate = req.body.rate;
-            if (req.body.bio !== undefined) user.bio = req.body.bio;
-            if (req.body.qualifications !== undefined) user.qualifications = req.body.qualifications;
-            if (req.body.experience !== undefined) user.experience = req.body.experience;
-            if (req.body.availability !== undefined) user.availability = req.body.availability;
+            // Check password
+            const isValidPassword = await user.comparePassword(password);
+            if (!isValidPassword) {
+                return res.status(401).json({
+                    status: 'error',
+                    message: 'Invalid credentials'
+                });
+            }
+
+            // Return success response
+            return res.status(200).json({
+                status: 'success',
+                data: {
+                    user: user.getProfileData(),
+                    token: generateToken(user)
+                }
+            });
+        } catch (error) {
+            console.error('[Login Error]:', error);
+            return res.status(500).json({
+                status: 'error',
+                message: 'Login failed',
+                error: error.message
+            });
         }
-
-        const updatedUser = await user.save();
-        
-        // Use polymorphic method to get updated profile data
-        const profileData = updatedUser.getProfileData();
-        res.json({ 
-            ...profileData, 
-            token: generateToken(updatedUser.id) 
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
     }
-};
+}
 
-module.exports = { registerUser, loginUser, updateUserProfile, getProfile };
+// Base controller for profile operations
+class ProfileController {
+    async execute(req, res) {
+        try {
+            const user = await userRepository.findById(req.user.id);
+            if (!user) {
+                return res.status(404).json({
+                    status: 'error',
+                    message: 'User not found'
+                });
+            }
+
+            return res.status(200).json({
+                status: 'success',
+                data: user.getProfileData()
+            });
+        } catch (error) {
+            console.error('[Profile Error]:', error);
+            return res.status(500).json({
+                status: 'error',
+                message: 'Error fetching profile',
+                error: error.message
+            });
+        }
+    }
+}
+
+// Create decorated controllers
+const registerUser = new RegistrationController();
+const loginUser = new LoginController();
+const getProfile = new AuthenticationDecorator(new ProfileController());
+
+// Export controllers
+module.exports = {
+    registerUser: (req, res) => registerUser.execute(req, res),
+    loginUser: (req, res) => loginUser.execute(req, res),
+    getProfile: (req, res, next) => getProfile.execute(req, res, next),
+    generateToken
+};
