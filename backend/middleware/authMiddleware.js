@@ -1,24 +1,20 @@
 
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+// Import the new decorator-based authentication
+const { 
+    AuthDecorator, 
+    protect,
+    requireAuth,
+    requireTherapist,
+    requirePatient,
+    optionalAuth
+} = require('./authDecorator');
 
-const protect = async (req, res, next) => {
-    let token;
-
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        try {
-            token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            req.user = await User.findById(decoded.id).select('-password');
-            next();
-        } catch (error) {
-            res.status(401).json({ message: 'Not authorized, token failed' });
-        }
-    }
-
-    if (!token) {
-        res.status(401).json({ message: 'Not authorized, no token' });
-    }
+// Export both old and new interfaces for compatibility
+module.exports = { 
+    protect,
+    AuthDecorator,
+    requireAuth,
+    requireTherapist,
+    requirePatient,
+    optionalAuth
 };
-
-module.exports = { protect };
