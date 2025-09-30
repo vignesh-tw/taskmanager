@@ -1,0 +1,190 @@
+name: Backend CI - Tests and Linting
+
+on:
+  # Manual trigger with optional commit hash
+  workflow_dispatch:
+    inputs:
+      commit_hash:
+        description: 'Commit hash to test (leave blank for latest)'
+        required: false
+        default: ''
+        type: string
+  
+  # Automatic triggers
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    services:
+      mongodb:
+        image: mongo:6.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: test
+          MONGO_INITDB_ROOT_PASSWORD: test
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ping: 1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 27017:27017
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Use specified commit hash or default to latest
+          ref: ${{ github.event.inputs.commit_hash || github.sha }}
+          fetch-depth: 0
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: ./backend
+        run: npm run lint
+        continue-on-error: false
+
+      - name: Run Prettier check
+        working-directory: ./backend
+        run: npx prettier --check "**/*.{js,json,md}" --ignore-path .gitignore
+        continue-on-error: false
+
+      - name: Wait for MongoDB to be ready
+        run: |
+          until mongosh --host localhost:27017 --username test --password test --authenticationDatabase admin --eval "db.adminCommand('ping')" > /dev/null 2>&1; do
+            echo "Waiting for MongoDB..."
+            sleep 2
+          done
+          echo "MongoDB is ready!"
+
+      - name: Run unit tests
+        working-directory: ./backend
+        run: npm test -- --coverage --forceExit
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://test:test@localhost:27017/taskmanager_test?authSource=admin
+          JWT_SECRET: test-secret-key-for-ci
+          PORT: 3001
+
+      - name: Run integration tests
+        working-directory: ./backend
+        run: npm run test:integration || echo "No integration tests found"
+        continue-on-error: true
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://test:test@localhost:27017/taskmanager_test?authSource=admin
+          JWT_SECRET: test-secret-key-for-ci
+          PORT: 3001
+
+      - name: Upload test coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./backend/coverage/lcov.info
+          flags: backend
+          name: backend-coverage
+          fail_ci_if_error: false
+
+  backend-lint-and-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.commit_hash || github.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Check code formatting
+        working-directory: ./backend
+        run: npx prettier --check "**/*.{js,json,md}" --ignore-path .gitignore
+
+      - name: Run linting with detailed output
+        working-directory: ./backend
+        run: npx eslint . --ext .js --format stylish
+
+      - name: Check for unused dependencies
+        working-directory: ./backend
+        run: npx depcheck --ignores="jest,supertest,nodemon"
+        continue-on-error: true
+
+  backend-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.commit_hash || github.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run security audit
+        working-directory: ./backend
+        run: npm audit --audit-level=moderate
+
+      - name: Check for outdated packages
+        working-directory: ./backend
+        run: npm outdated
+        continue-on-error: true
+
+  notify-status:
+    runs-on: ubuntu-latest
+    needs: [backend-test, backend-lint-and-format, backend-audit]
+    if: always()
+    steps:
+      - name: Notify success
+        if: needs.backend-test.result == 'success' && needs.backend-lint-and-format.result == 'success' && needs.backend-audit.result == 'success'
+        run: |
+          echo "✅ Backend CI completed successfully!"
+          echo "Commit: ${{ github.event.inputs.commit_hash || github.sha }}"
+          echo "All tests passed, linting checks completed, and security audit passed."
+
+      - name: Notify failure
+        if: needs.backend-test.result == 'failure' || needs.backend-lint-and-format.result == 'failure' || needs.backend-audit.result == 'failure'
+        run: |
+          echo "❌ Backend CI failed!"
+          echo "Commit: ${{ github.event.inputs.commit_hash || github.sha }}"
+          echo "Please check the logs above for details."
+          exit 1

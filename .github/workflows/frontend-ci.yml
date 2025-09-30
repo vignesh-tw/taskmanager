@@ -1,0 +1,134 @@
+name: Frontend CI - Tests and Linting
+
+on:
+  # Manual trigger with optional commit hash
+  workflow_dispatch:
+    inputs:
+      commit_hash:
+        description: 'Commit hash to test (leave blank for latest)'
+        required: false
+        default: ''
+        type: string
+  
+  # Automatic triggers
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+  
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+
+jobs:
+  frontend-test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Use specified commit hash or default to latest
+          ref: ${{ github.event.inputs.commit_hash || github.sha }}
+          fetch-depth: 0
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: ./frontend
+        run: npm run lint
+        continue-on-error: false
+
+      - name: Run Prettier check
+        working-directory: ./frontend
+        run: npx prettier --check "src/**/*.{js,jsx,ts,tsx,json,css,md}"
+        continue-on-error: false
+
+      - name: Run unit tests
+        working-directory: ./frontend
+        run: npm test -- --coverage --watchAll=false
+        env:
+          CI: true
+
+      - name: Upload test coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
+
+      - name: Build application
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-build-${{ matrix.node-version }}
+          path: frontend/build/
+          retention-days: 7
+
+  frontend-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.commit_hash || github.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run security audit
+        working-directory: ./frontend
+        run: npm audit --audit-level=moderate
+
+      - name: Check for outdated packages
+        working-directory: ./frontend
+        run: npm outdated
+        continue-on-error: true
+
+  notify-status:
+    runs-on: ubuntu-latest
+    needs: [frontend-test, frontend-audit]
+    if: always()
+    steps:
+      - name: Notify success
+        if: needs.frontend-test.result == 'success' && needs.frontend-audit.result == 'success'
+        run: |
+          echo "✅ Frontend CI completed successfully!"
+          echo "Commit: ${{ github.event.inputs.commit_hash || github.sha }}"
+          echo "All tests passed and linting checks completed."
+
+      - name: Notify failure
+        if: needs.frontend-test.result == 'failure' || needs.frontend-audit.result == 'failure'
+        run: |
+          echo "❌ Frontend CI failed!"
+          echo "Commit: ${{ github.event.inputs.commit_hash || github.sha }}"
+          echo "Please check the logs above for details."
+          exit 1
